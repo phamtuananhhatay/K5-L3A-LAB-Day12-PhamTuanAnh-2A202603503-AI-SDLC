@@ -48,3 +48,68 @@ Giữ các luật gameplay của Ticket-03:
 
 Cảnh benchmark có cấu hình riêng theo Ticket-04.
 Cấu hình benchmark không được làm thay đổi luật của bản chơi thường.
+
+## Chi tiết nghiệm thu bắt buộc
+
+Nguồn đầy đủ: ../requirements/Ticket-04.md.
+Các mục dưới đây bổ sung chi tiết cho bảng checklist, không thay thế ticket gốc.
+
+### P4-02 đến P4-05 — Benchmark
+
+- Cửa sổ 1280×720, không toàn màn hình.
+- Cảnh Đêm 1, đầy đủ hiệu ứng và ánh sáng của bản chơi thật.
+- Đúng 200 Bóng Mực wander và 100 đom đóm, phân bố theo seed 42.
+- L1–L3 đang sáng và có 100 fuel.
+- Tắt spawn thêm, sát thương, pickup, hao dầu và kết thúc Đêm.
+- Phần sáng tạo bổ sung không được ảnh hưởng số đo.
+- Mây đứng yên tại (0,0,0), không input.
+- Camera bán kính 30 m, Y=15 m, nhìn vào gốc.
+- Bắt đầu tại (30,15,0), quay ngược chiều kim đồng hồ khi nhìn từ trên.
+- Camera hoàn thành một vòng trong 15 giây.
+- Bỏ 3 giây khởi động; sau đó đo đúng duration.
+- avg_fps = 1000 × N / tổng thời gian các frame đo.
+- 1% low: lấy max(1,ceil(0.01×N)) frame có dt lớn nhất;
+  kết quả = 1000 / trung bình dt của nhóm đó.
+- frame_ms_p95 là phân vị 95 của thời gian frame.
+- load_ms tính từ lúc tiến trình bắt đầu tới frame đầu của cảnh bench.
+- peak_mem_mb là RSS cao nhất trong khoảng đo.
+- Bản web không đo được RSS thì ghi null và giải thích.
+- Ghi đúng vsync_off; nếu không tắt được phải giải thích.
+- Output có đủ trường theo JSON mẫu của ticket.
+- Đo thật, không tự điền hoặc sửa số liệu.
+- Ghi cấu hình máy; ngưỡng chính thức được chấm trên máy giảng viên.
+
+### P4-06 đến P4-07 — Soak
+
+- Chạy 10 Đêm trong cùng một tiến trình.
+- Luân phiên Đêm 1→2→3.
+- Seed từng Đêm theo quy tắc seed+i của ticket.
+- Mỗi 30 tick chọn lại hướng di chuyển.
+- Mỗi tick: xác suất 5% nhảy, 3% dash, 2% pulse, 10% interact.
+- Mỗi Đêm chạy tới kết thúc hoặc hết thời lượng chuẩn.
+- mem_start_mb: RSS sau khi tải xong Đêm đầu.
+- mem_end_mb: RSS sau khi reset xong Đêm cuối.
+- Output đủ nights, crashes, results, mem_start_mb,
+  mem_end_mb và duration_s.
+- Đạt khi crashes=0 và mem_end_mb≤1.2×mem_start_mb.
+
+### P4-08 đến P4-10 — Bảng xếp hạng
+
+- Tên dài 3–12 ký tự, chỉ dùng A–Z,a–z,0–9 và dấu gạch dưới.
+- Mỗi mục đủ name, score, nights_won, achieved_at, seed.
+- score chỉ là tổng điểm các Đêm đã thắng.
+- nights_won nằm trong 0–3.
+- achieved_at là ISO 8601 có múi giờ.
+- Top 10: score giảm dần; bằng điểm thì đạt trước đứng trước.
+- Dữ liệu còn sau khi đóng/mở game.
+- UI và lệnh export đọc cùng nguồn dữ liệu.
+- Export đúng dạng {"entries":[...]} và đúng thứ tự.
+
+### P4-11 đến P4-13 — Accessibility
+
+- Đổi được mọi hành động mà ticket liệt kê.
+- Báo trùng phím, khôi phục mặc định và lưu cài đặt.
+- Chỉ báo Bóng Mực xuất hiện có mũi tên hướng ở mép màn hình.
+- Có chỉ báo gió sắp thổi, 10 giây cuối và đèn dưới 30 fuel.
+- Giảm chuyển động tắt rung camera/chớp màn hình.
+- Chữ UI tối thiểu 18 px tại 1280×720; chữ lớn ×1.25.
