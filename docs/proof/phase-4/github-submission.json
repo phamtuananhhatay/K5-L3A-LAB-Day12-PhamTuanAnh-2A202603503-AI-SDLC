@@ -1,0 +1,41 @@
+{
+  "checked_at": "2026-11-20T15:24:02.050Z",
+  "repo_public": true,
+  "release_public": true,
+  "release_url": "https://github.com/phamtuananhhatay/K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC/releases/tag/v1.0.0",
+  "unauthenticated_asset_downloads": true,
+  "assets": [
+    {
+      "name": "dao-den-long-v1.0.0-web.zip",
+      "bytes": 6761552,
+      "sha256": "52edf5af07d928734725b0b1c6405f39eee4e0556e08597e66f745e8aa5b4a85",
+      "public_url": "https://github.com/phamtuananhhatay/K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC/releases/download/v1.0.0/dao-den-long-v1.0.0-web.zip"
+    },
+    {
+      "name": "demo.mp4",
+      "bytes": 7478249,
+      "sha256": "ac8037458c0579d978ce7ffa827da4d5c771fbfd17b4f4907622057dc831cc5e",
+      "public_url": "https://github.com/phamtuananhhatay/K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC/releases/download/v1.0.0/demo.mp4"
+    },
+    {
+      "name": "bench.json",
+      "bytes": 390,
+      "sha256": "5ffefaa36fe7e30ff7f3ad5306788b3e48ec576191f488b0e470adbe3c84513b",
+      "public_url": "https://github.com/phamtuananhhatay/K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC/releases/download/v1.0.0/bench.json"
+    },
+    {
+      "name": "soak.json",
+      "bytes": 252,
+      "sha256": "b257960920af26e0188d46837d8421ad5e0a895ce29b54811fe134baf8440650",
+      "public_url": "https://github.com/phamtuananhhatay/K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC/releases/download/v1.0.0/soak.json"
+    }
+  ],
+  "tags": {
+    "phase-1": "438f13e53164f1d219f5be2b0652e723488714b1",
+    "phase-2": "3bd00d331784aff21650ddb95c7523a805e31e40",
+    "phase-3": "645e07ed8212f3d8813762453027bc2a048fbde3",
+    "phase-4": "4a2ea1fdddaf53eeb3660f6e7c6eea619bbf12bb",
+    "v1.0.0": "4a2ea1fdddaf53eeb3660f6e7c6eea619bbf12bb"
+  },
+  "repo_name_pending_user_rename": true
+}

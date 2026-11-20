@@ -44,4 +44,4 @@ Bench chạy thật trên cửa sổ browser và dùng renderer game thật. Kh�
 
 Mẫu video có gameplay thật và output tiến trình thật; các panel bench/soak là kết quả đã đo trước khi quay, được ghi rõ trên video. Không tuyên bố đã chơi bằng tay toàn bộ3Đêm hoặc chạy macOS/Linux. Test tự viết không phải test ẩn giảng viên.
 
-GitHub push/Release vẫn chờ xác nhận rõ quyền xuất repo tới remote sau lần automatic approval review đã chặn. Gói ZIP, nội dung Release và tag cục bộ là phần chuẩn bị; chỉ cập nhật hoàn thành DoD GitHub khi đã quan sát được Release thật và truy cập công khai.
+GitHub push/Release đã được người làm lab xác nhận và hoàn tất. [Releasev1.0.0](https://github.com/phamtuananhhatay/K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC/releases/tag/v1.0.0) công khai, có ZIP/demo/bench/soak. Đã tải4asset không đăng nhập và so SHA256 trùng local;5tag khớp commit. Xem [bằng chứng](docs/proof/phase-4/github-submission.json) và [đối chiếu SUBMISSION](docs/notes/SUBMISSION-AUDIT.md). Tên repo vẫn chờ người làm lab tự đổi theo xác nhận; việc nộp link LMS/hạn ca theo Coach do người làm lab thực hiện.
