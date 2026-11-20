@@ -5,6 +5,7 @@ const legacyCodes={65:'KeyA',68:'KeyD',69:'KeyE',70:'KeyF',80:'KeyP',81:'KeyQ',8
 export const GAME_KEYS=new Set(['KeyW','KeyA','KeyS','KeyD','KeyE','KeyF','KeyQ','KeyR','Space','ShiftLeft','ShiftRight','Escape','KeyP','ArrowLeft','ArrowRight']);
 export function physicalKey(event){
   if(GAME_KEYS.has(event.code))return event.code;
+  if(typeof event.code==='string'&&/^(Key[A-Z]|Digit[0-9]|Arrow(Up|Down|Left|Right)|Space|Enter|Tab|Escape|Shift(Left|Right)|Control(Left|Right)|Alt(Left|Right))$/.test(event.code))return event.code;
   if(legacyCodes[event.keyCode])return legacyCodes[event.keyCode];
   return keyNames[event.key?.length===1?event.key.toLowerCase():event.key]??null;
 }

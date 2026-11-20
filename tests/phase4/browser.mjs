@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {join,resolve,sep} from 'node:path';
+import {tmpdir} from 'node:os';
+import {openBrowser,wait} from '../../scripts/browser-runtime.mjs';
+const temp=await mkdtemp(join(tmpdir(),'lantern-p4-test-'));const data=join(temp,'leaderboard.json');const output='docs/proof/phase-4';await mkdir(output,{recursive:true});
+const browser=await openBrowser({port:4195,dataFile:data});
+try{
+ const ev=browser.evaluate;const click=text=>ev(`(()=>{const b=[...document.querySelectorAll('#flow button')].find(b=>b.textContent.includes(${JSON.stringify(text)}));if(!b)throw new Error('Button not found');b.click();return true;})()`);
+ await browser.ready();await click('Cài đặt');
+ await ev(`document.querySelector('[data-action="forward"]').click();window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyS'}));true`);assert.match(await ev(`document.querySelector('#binding-error').textContent`),/Trùng/);
+ await ev(`window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyI'}));document.querySelector('#largeText').click();document.querySelector('#reducedMotion').click();true`);
+ await browser.navigate('/');await browser.ready();assert.equal(await ev(`JSON.parse(localStorage.getItem('lantern-settings')).bindings.forward`),'KeyI');
+ await click('Bắt đầu');await click('Ông Đăng');const start=await ev(`import('/src/game.mjs').then(m=>m.inspectGame())`);
+ await ev(`window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyI'}));true`);await wait(250);await ev(`window.dispatchEvent(new KeyboardEvent('keyup',{code:'KeyI'}));true`);const moved=await ev(`import('/src/game.mjs').then(m=>m.inspectGame())`);assert.ok(moved.player.pos[2]>start.player.pos[2]);
+ assert.equal(await ev(`document.documentElement.dataset.reducedMotion`),'true');assert.ok(await ev(`[...document.querySelectorAll('#hud div,#hud strong,#hint,#cells,#cooldowns')].every(e=>parseFloat(getComputedStyle(e).fontSize)>=22.5)`));
+ await wait(5000);assert.match(await ev(`document.querySelector('#announcements').textContent`),/Bóng Mực/);assert.equal(await ev(`document.querySelector('#spawn-arrow').style.display`),'block');
+ await ev(`window.dispatchEvent(new KeyboardEvent('keydown',{code:'Escape'}));true`);await click('Cài đặt');await click('Khôi phục mặc định');assert.equal(await ev(`JSON.parse(localStorage.getItem('lantern-settings')).bindings.forward`),'KeyW');
+ await browser.navigate('/?scene=lose&night=1');await browser.ready();await click('Ông Đăng');await wait(400);assert.ok(await ev(`Boolean(document.querySelector('#player-name'))`));
+ await ev(`const input=document.querySelector('#player-name');input.value='Player_1';input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));true`);await wait(300);
+ let entries=(await(await fetch(browser.base+'/api/leaderboard')).json()).entries;assert.equal(entries.length,1);assert.equal(entries[0].score,0);assert.equal(entries[0].nights_won,0);
+ await browser.navigate('/?scene=win&night=1');await browser.ready();await click('Ông Đăng');await wait(300);assert.equal(await ev(`Boolean(document.querySelector('#player-name'))`),false);
+ await click('Đêm tiếp theo');await click('Ông Đăng');await wait(300);await click('Đêm tiếp theo');await click('Ông Đăng');await wait(300);
+ const journey=await ev(`import('/src/game.mjs').then(m=>m.inspectGame().journey)`);assert.equal(journey.nights_won,3);
+ await ev(`document.querySelector('#player-name').value='Winner_3';document.querySelector('#player-name').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));true`);await wait(300);
+ entries=(await(await fetch(browser.base+'/api/leaderboard')).json()).entries;assert.equal(entries[0].score,journey.score);assert.equal(entries[0].nights_won,3);assert.equal(entries.length,2);
+ await click('Bảng xếp hạng');await wait(200);const screenshot=await browser.send('Page.captureScreenshot',{format:'png'},browser.sessionId);await writeFile(join(output,'leaderboard.png'),Buffer.from(screenshot.data,'base64'));
+ await browser.navigate('/?scene=fuel&night=1');await browser.ready();await click('Ông Đăng');await wait(200);assert.match(await ev(`document.querySelector('#announcements').textContent`),/10 giây|dưới30/);
+ await browser.navigate('/?scene=cues&night=3');await browser.ready();await click('Ông Đăng');await wait(28300);
+ const cues=await ev(`document.querySelector('#announcements').textContent`);assert.match(cues,/Gió mạnh sắp thổi/);assert.match(cues,/Bình minh sau/);
+ const cueShot=await browser.send('Page.captureScreenshot',{format:'png'},browser.sessionId);await writeFile(join(output,'wind-countdown.png'),Buffer.from(cueShot.data,'base64'));
+ const report={rebinding:true,duplicate_detection:true,reset_defaults:true,persistence:true,font_large_min_22_5:true,reduced_motion:true,loss_entry:true,double_submit_prevented:true,three_night_journey_score:true,leaderboard_UI:true,low_fuel_cue:true,shade_spawn_cue_and_edge_arrow:true,wind_warning:true,last_ten_seconds:true};await writeFile(join(output,'browser.json'),JSON.stringify(report,null,2));console.log('PASS browser Phase4',report);
+}finally{await browser.close();if(resolve(temp).startsWith(resolve(tmpdir())+sep))await rm(temp,{recursive:true,force:true});}

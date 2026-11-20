@@ -1,0 +1,16 @@
+{
+  "rebinding": true,
+  "duplicate_detection": true,
+  "reset_defaults": true,
+  "persistence": true,
+  "font_large_min_22_5": true,
+  "reduced_motion": true,
+  "loss_entry": true,
+  "double_submit_prevented": true,
+  "three_night_journey_score": true,
+  "leaderboard_UI": true,
+  "low_fuel_cue": true,
+  "shade_spawn_cue_and_edge_arrow": true,
+  "wind_warning": true,
+  "last_ten_seconds": true
+}

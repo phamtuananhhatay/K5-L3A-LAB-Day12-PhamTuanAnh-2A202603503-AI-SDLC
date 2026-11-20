@@ -1,0 +1,58 @@
+{
+  "night": 1,
+  "shades": 200,
+  "motes": 100,
+  "states": [
+    "wander"
+  ],
+  "player": [
+    0,
+    0,
+    0
+  ],
+  "lanterns": [
+    {
+      "id": "L1",
+      "lit": true,
+      "fuel": 100
+    },
+    {
+      "id": "L2",
+      "lit": true,
+      "fuel": 100
+    },
+    {
+      "id": "L3",
+      "lit": true,
+      "fuel": 100
+    },
+    {
+      "id": "L4",
+      "lit": false,
+      "fuel": 0
+    },
+    {
+      "id": "L5",
+      "lit": false,
+      "fuel": 0
+    }
+  ],
+  "camera": {
+    "radius": 30,
+    "height": 15,
+    "initial": [
+      30,
+      15,
+      0
+    ],
+    "seconds_per_orbit": 15
+  },
+  "frozen": [
+    "spawn",
+    "damage",
+    "pickup",
+    "fuel",
+    "game_over"
+  ],
+  "creative_extras": false
+}

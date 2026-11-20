@@ -1,0 +1,27 @@
+{
+  "commands": [
+    {
+      "command": "node tests/phase1/verify.mjs",
+      "exit_code": 0,
+      "stdout": "PASS keyboard taps, hold/release, diagonal, focus reset and IME physical-key mapping\nPASS: three map layouts, exact edges, bridge, tiers and ramps\nPASS dash (values + byte determinism)\nPASS pause (values + byte determinism)\nPASS resume (values + byte determinism)\nPASS charm (values + byte determinism)\nPASS steal (values + byte determinism)\nPASS drifter-drop (values + byte determinism)\nPASS fall (values + byte determinism)\nPASS hit-drop (values + byte determinism)\nPASS pulse (values + byte determinism)\nPASS deposit (values + byte determinism)\nPASS shade-spawn (values + byte determinism)\nPASS drifter-spawn (values + byte determinism)\nPASS wind (values + byte determinism)\nPASS pad (values + byte determinism)\nPASS invalid inputs/scenarios: duplicate ticks, move range, shade state, pause type, malformed JSON\nPASS 14 phase-2 scenarios + standardized regression checks\nPASS standardized regression: yaw, capacity, partial deposit/persistence, respawn, both pads, aerial dash, boundary, held pulse, charm cooldown\nPASS scenario-default (values/events/schema + identical bytes)\nPASS decay (values/events/schema + identical bytes)\nPASS out (values/events/schema + identical bytes)\nPASS first-light (values/events/schema + identical bytes)\nPASS relight (values/events/schema + identical bytes)\nPASS out-and-relight (values/events/schema + identical bytes)\nPASS refuel (values/events/schema + identical bytes)\nPASS partial-refuel (values/events/schema + identical bytes)\nPASS no-early-win (values/events/schema + identical bytes)\nPASS dawn-won (values/events/schema + identical bytes)\nPASS dawn-lost (values/events/schema + identical bytes)\nPASS out-at-dawn (values/events/schema + identical bytes)\nPASS dead-at-dawn (values/events/schema + identical bytes)\nPASS single-drain (values/events/schema + identical bytes)\nPASS double-drain (values/events/schema + identical bytes)\nPASS enter-drain (values/events/schema + identical bytes)\nPASS pulse-drain (values/events/schema + identical bytes)\nPASS restore-safe-zone (values/events/schema + identical bytes)\nPASS pause-oil (values/events/schema + identical bytes)\nPASS max-capacity (values/events/schema + identical bytes)\nPASS night2-threshold (values/events/schema + identical bytes)\nPASS night3-threshold (values/events/schema + identical bytes)\nPASS relight-at-dawn (values/events/schema + identical bytes)\nPASS night2-below-threshold (values/events/schema + identical bytes)\nPASS night3-below-threshold (values/events/schema + identical bytes)\nPASS full lamp excluded; nearest eligible and ID tie-break\nPASS safe threshold uses exact unrounded fuel\nPASS wander selects nearest weak lamp, chase retains player\nPASS drain exits for player, extinguished target, range, restored fuel; stun recovers to wander\nPASS capacity grows on relight and resets next night\nPASS integer decay extinguishes once at exactly tick6000\nPASS drain event cadence and safe-zone restoration within30 ticks\nPASS invalid new scenario fields return code2\nPhase3: 33 checks passed\n"
+    },
+    {
+      "command": "node tests/phase4/leaderboard.mjs",
+      "exit_code": 0,
+      "stdout": "--- Phase 4 Task 2: Leaderboard Tests ---\nPASS 1. Name validation rejects < 3 chars, > 12 chars, spaces, and special symbols\nPASS 2. addEntry validates score, nights_won, and seed types and bounds\nPASS 3. sortEntries: score desc, then achieved_at asc (earlier wins, non-alphabetical)\nPASS 4. Capacity: adding 12 entries keeps only top 10\nPASS 5. Journey scores: won nights summed, lost night points excluded\nPASS 6. Concurrent saves do not drop writes or corrupt JSON\nPASS 7. Missing file (ENOENT) returns empty entries array\nPASS 8. Corrupted JSON file throws error and preserves file\nPASS 9. CLI --export-leaderboard outputs formatted top 10 JSON\nPASS 10. CLI --export-leaderboard without path exits with code 1\nPASS 11. HTTP API: GET and POST /api/leaderboard\nPASS 12. Default data/leaderboard.json is valid and exports cleanly\n\n========================================\nPhase 4 Leaderboard: All 12 tests PASSED!\n========================================\n"
+    },
+    {
+      "command": "node tests/phase4/verify.mjs",
+      "exit_code": 0,
+      "stdout": "PASS Phase4 benchmark scene/freeze, deterministic population, exact frame metric formulas, rebinding and conflict validation\n"
+    }
+  ],
+  "headless_end": {
+    "type": "end",
+    "ticks": 120,
+    "state": "playing",
+    "score": 0
+  },
+  "bytes": 7478249,
+  "note": "Actual browser gameplay captured using MediaRecorder MP4 at30fps; terminal outputs are actual subprocess output; bench/soak panels show previously measured committed artifacts. No narration."
+}

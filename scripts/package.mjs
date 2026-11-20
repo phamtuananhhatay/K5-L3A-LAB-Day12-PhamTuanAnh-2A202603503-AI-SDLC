@@ -1,0 +1,10 @@
+import {mkdir,cp,rm,writeFile} from 'node:fs/promises';
+import {resolve,sep} from 'node:path';
+import {zipDirectory} from './zip.mjs';
+const dist=resolve('dist'),target=resolve('dist/dao-den-long-v1.0.0');
+if(!target.startsWith(dist+sep))throw new Error('Invalid packaging target');
+await rm(target,{recursive:true,force:true});await mkdir(target,{recursive:true});
+for(const path of ['src','scripts','tests','docs','skills','smoke','index.html','package.json','game.contract.json','README.md','LICENSE','CREDITS.md','CHANGELOG.md','AGENTS.md','PHASE-1-REPORT.md','PHASE-2-REPORT.md','PHASE-3-REPORT.md','PHASE-4-REPORT.md','RELEASE-NOTES.md','bench.json','bench.frames.json','bench.scene.json','soak.json'])await cp(path,resolve(target,path),{recursive:true});
+await writeFile(resolve(target,'START-HERE.txt'),'DAO DEN LONG v1.0.0\nRequires Node.js22+ and WebGL2 browser.\nRun: node scripts/build.mjs\nThen: node scripts/serve.mjs\nOpen http://127.0.0.1:4173/\nLeaderboard stored locally in data/leaderboard.json.\nBenchmark also needs installed Chrome/Chromium (CHROME_PATH if needed).\n');
+const zip=resolve(dist,'dao-den-long-v1.0.0-web.zip');
+await zipDirectory(target,zip);console.log(`Release package: ${zip}`);

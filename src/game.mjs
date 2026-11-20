@@ -2,6 +2,8 @@ import { createGame, INITIAL_INPUT, step, snapshot, TUNING, capacity, fuelValue,
 import { settings, saveSettings, startAudio, sound } from './audio.mjs';
 import { HEX, color } from './colors.mjs';
 import { KeyboardInput, physicalKey, GAME_KEYS } from './input.mjs';
+import {createBenchmark,stepBenchmark,frameMetrics} from './benchmark.mjs';
+import {DEFAULT_BINDINGS,ACTION_LABELS,rebind,actionDown} from './controls.mjs';
 
 const canvas = document.querySelector('#scene');
 canvas.tabIndex=0;
@@ -132,46 +134,72 @@ function model(pos, scale, rotation = 0) {
   ]);
 }
 let viewProjection;
-let opaqueVertices=[],transparentVertices=[];
+const opaqueVertices=new Float32Array(1048576),transparentVertices=new Float32Array(262144);
+let opaqueCount=0,transparentCount=0;
 const frameBuffer=gl.createBuffer();
 function draw(mesh, pos, scale, rgba, rotation = 0, emissive = false) {
   const progress = game.lanterns.filter(l=>l.lit).length / game.lanterns.length;
   const ambient=emissive?1:.15+.55*progress,c=Math.cos(rotation),s=Math.sin(rotation);
-  const dest=rgba[3]<1?transparentVertices:opaqueVertices;
-  for(let i=0;i<mesh.vertices.length;i+=3){const x=mesh.vertices[i]*scale[0],y=mesh.vertices[i+1]*scale[1],z=mesh.vertices[i+2]*scale[2];dest.push(pos[0]+c*x+s*z,pos[1]+y,pos[2]-s*x+c*z,rgba[0]*ambient,rgba[1]*ambient,rgba[2]*ambient,rgba[3]);}
+  const transparent=rgba[3]<1,dest=transparent?transparentVertices:opaqueVertices;let offset=transparent?transparentCount:opaqueCount;
+  if(offset+mesh.count*7>dest.length)throw new Error('Render batch capacity exceeded');
+  for(let i=0;i<mesh.vertices.length;i+=3){const x=mesh.vertices[i]*scale[0],y=mesh.vertices[i+1]*scale[1],z=mesh.vertices[i+2]*scale[2];dest[offset++]=pos[0]+c*x+s*z;dest[offset++]=pos[1]+y;dest[offset++]=pos[2]-s*x+c*z;dest[offset++]=rgba[0]*ambient;dest[offset++]=rgba[1]*ambient;dest[offset++]=rgba[2]*ambient;dest[offset++]=rgba[3];}
+  if(transparent)transparentCount=offset;else opaqueCount=offset;
 }
 function flush(){
   gl.bindBuffer(gl.ARRAY_BUFFER,frameBuffer);gl.enableVertexAttribArray(positionLocation);gl.enableVertexAttribArray(vertexColorLocation);gl.vertexAttribPointer(positionLocation,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(vertexColorLocation,4,gl.FLOAT,false,28,12);gl.uniformMatrix4fv(mvpLocation,false,viewProjection);
-  for(const [vertices,depth]of [[opaqueVertices,true],[transparentVertices,false]]){gl.depthMask(depth);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,vertices.length/7);}gl.depthMask(true);opaqueVertices=[];transparentVertices=[];
+  for(const [vertices,count,depth]of [[opaqueVertices,opaqueCount,true],[transparentVertices,transparentCount,false]]){gl.depthMask(depth);gl.bufferData(gl.ARRAY_BUFFER,vertices.subarray(0,count),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,count/7);}gl.depthMask(true);opaqueCount=0;transparentCount=0;
 }
 
-const previewScenario=new URLSearchParams(location.search).get('scene')==='fuel'
-  ? await fetch('/tests/phase3/preview.json').then(response=>{if(!response.ok)throw new Error('Cannot load fuel preview');return response.json();}) : {};
-let game = createGame(42,previewScenario);
+const urlOptions=new URLSearchParams(location.search);
+const benchmarkMode=urlOptions.get('bench')==='1';
+const benchmarkDuration=Number(urlOptions.get('duration')??30);
+const benchmarkState={done:false,first_frame_epoch:0,measureStart:0,times:[],last:0};
+const previewPath={fuel:'/tests/phase3/preview.json',win:'/tests/phase4/win.json',lose:'/tests/phase4/lose.json',cues:'/tests/phase4/cues.json'}[urlOptions.get('scene')];
+const previewScenario=previewPath?await fetch(previewPath).then(response=>{if(!response.ok)throw new Error('Cannot load diagnostic scenario');return response.json();}):{};
+let game = benchmarkMode?createBenchmark(Number(urlOptions.get('seed')??42)):createGame(42,previewScenario);
 let previousInput = { ...INITIAL_INPUT };
 let cameraYaw = 0;
 let pulseFlash = 0;
 let screen = 'menu', totalScore = 0, night = 1;
+let wonScores = [null, null, null];
+let scoreSubmitted = false;
+let bindingToCapture=null;
+let recentSpawn=null;
 let fpsFrames=0, fpsTime=0, averageFps=0;
 const panel=document.createElement('section');panel.id='flow';document.body.append(panel);
-const style=document.createElement('style');style.textContent=`#flow{position:fixed;inset:0;background:#10162be8;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#ffe2a3}#flow button{font:inherit;padding:12px 28px;background:#f6c56c;border:0;border-radius:8px;cursor:pointer}#flow h2{font-size:36px}#flow label{display:flex;gap:20px}#cells{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:23px;letter-spacing:4px}#cooldowns{position:fixed;bottom:65px;right:20px;padding:10px;background:#12162bcc}#direction{position:fixed;top:16px;right:20px;color:#ffdb77}#time.urgent{color:#ff6565;animation:blink .6s infinite alternate}@keyframes blink{to{opacity:.25}}`;document.head.append(style);
+const style=document.createElement('style');style.textContent=`#flow{position:fixed;inset:0;background:#10162be8;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#ffe2a3;overflow-y:auto;padding:20px;box-sizing:border-box}#flow button{font:inherit;padding:12px 28px;background:#f6c56c;border:0;border-radius:8px;cursor:pointer}#flow button:disabled{opacity:.5;cursor:not-allowed}#flow input[type="text"]{font:inherit;padding:10px 16px;background:#1a223f;border:1px solid #f6c56c;border-radius:6px;color:#ffe2a3;font-size:16px;outline:none;text-align:center}#flow table{border-collapse:collapse;margin:10px 0;min-width:440px;max-width:90vw;font-size:15px}#flow th,#flow td{padding:8px 14px;text-align:center;border-bottom:1px solid #334166}#flow th{color:#f6c56c;border-bottom:2px solid #f6c56c}#flow .error{color:#ff6565;font-size:14px}#flow .success{color:#65ff88;font-size:14px}#flow .row-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}#flow h2{font-size:36px}#flow label{display:flex;gap:20px}#cells{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:23px;letter-spacing:4px}#cooldowns{position:fixed;bottom:65px;right:20px;padding:10px;background:#12162bcc}#direction{position:fixed;top:16px;right:20px;color:#ffdb77}#time.urgent{color:#ff6565;animation:blink .6s infinite alternate}@keyframes blink{to{opacity:.25}}`;document.head.append(style);
 for(const id of ['cells','cooldowns','direction','fuel-status']){const el=document.createElement('div');el.id=id;document.body.append(el);}
-function showPanel(title,buttons){panel.replaceChildren();const h=document.createElement('h2');h.textContent=title;panel.append(h);for(const [label,action]of buttons){const b=document.createElement('button');b.textContent=label;b.onclick=action;panel.append(b);}panel.style.display='flex';}
+const accessibilityStyle=document.createElement('style');accessibilityStyle.textContent=`:root{--ui-scale:1}body :is(div,p,strong,label,span,button,input,select,td,th,li,h1,h3){font-size:calc(18px * var(--ui-scale))!important}#flow{justify-content:flex-start;padding-top:45px}#flow>*{flex-shrink:0}#hint{white-space:normal;max-width:94vw;width:max-content}#cells{letter-spacing:1px;max-width:75vw;bottom:85px}#cooldowns{bottom:130px;right:12px}#announcements{position:fixed;top:110px;left:50%;transform:translateX(-50%);max-width:55vw;background:#0e1430dd;padding:8px;pointer-events:none}#spawn-arrow{position:fixed;color:#F2C14E;background:#0e1430dd;padding:8px;pointer-events:none}[data-reduced-motion=true] *{animation:none!important;transition:none!important}`;document.head.append(accessibilityStyle);
+for(const id of ['announcements','spawn-arrow']){const e=document.createElement('div');e.id=id;e.setAttribute('role','status');e.setAttribute('aria-live','polite');document.body.append(e);}
+function applyAccessibility(){document.documentElement.style.setProperty('--ui-scale',settings.largeText?'1.25':'1');document.documentElement.dataset.reducedMotion=String(settings.reducedMotion);document.documentElement.dataset.colorblind=String(settings.colorblind);}
+const keyLabel=code=>code.replace('Key','').replace('Digit','').replace('Left','').replace('Right','');
+function updateCues(){const messages=[];const seconds=Math.ceil(game.timeLeft);if(seconds<=10)messages.push(`⚠ Bình minh sau ${seconds} giây`);if(game.night===3&&game.windEnabled&&game.simTick%1800>=1680)messages.push('⚠ Gió mạnh sắp thổi');if(game.lanterns.some(l=>l.lit&&l.fuelUnits<1800))messages.push('⚠ Có đèn dưới30dầu — cần châm dầu');const arrow=document.querySelector('#spawn-arrow');if(recentSpawn&&game.simTick<=recentSpawn.until){messages.push('⚠ Bóng Mực vừa xuất hiện');const shade=game.shades.find(s=>s.id===recentSpawn.id);if(shade){const angle=Math.atan2(shade.pos[0]-game.player.pos[0],shade.pos[2]-game.player.pos[2])-cameraYaw*Math.PI/180;const dx=-Math.sin(angle),dy=-Math.cos(angle);const factor=1/Math.max(Math.abs(dx),Math.abs(dy),.001);arrow.style.left=`${50+dx*factor*43}%`;arrow.style.top=`${50+dy*factor*35}%`;arrow.textContent='➤ Bóng Mực';arrow.style.transform=`rotate(${Math.atan2(dy,dx)}rad)`;arrow.style.display='block';}}else arrow.style.display='none';document.querySelector('#announcements').textContent=messages.join(' · ');document.querySelector('#announcements').style.display=messages.length?'block':'none';}
+function showPanel(title,buttons){bindingToCapture=null;panel.replaceChildren();const h=document.createElement('h2');h.textContent=title;panel.append(h);for(const [label,action]of buttons){const b=document.createElement('button');b.textContent=label;b.onclick=action;panel.append(b);}panel.style.display='flex';}
+function formatDate(iso){try{const d=new Date(iso);if(isNaN(d.getTime()))return iso;const pad=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;}catch{return iso;}}
+async function showLeaderboard(back){panel.replaceChildren();const h=document.createElement('h2');h.textContent='BẢNG XẾP HẠNG';panel.append(h);const loading=document.createElement('p');loading.textContent='Đang tải...';panel.append(loading);const backBtn=document.createElement('button');backBtn.textContent='Quay lại';backBtn.onclick=back;try{const response=await fetch('/api/leaderboard');if(!response.ok)throw new Error('Không thể tải bảng điểm');const data=await response.json();loading.remove();if(!data.entries||data.entries.length===0){const emptyMsg=document.createElement('p');emptyMsg.textContent='Chưa có điểm nào được lưu.';panel.append(emptyMsg);}else{const table=document.createElement('table');table.innerHTML='<thead><tr><th>Hạng</th><th>Tên</th><th>Điểm</th><th>Số Đêm thắng</th><th>Thời gian</th></tr></thead>';const tbody=document.createElement('tbody');data.entries.slice(0,10).forEach((entry,idx)=>{const tr=document.createElement('tr');const tdRank=document.createElement('td');tdRank.textContent=`#${idx+1}`;const tdName=document.createElement('td');tdName.textContent=entry.name;const tdScore=document.createElement('td');tdScore.textContent=entry.score;const tdNights=document.createElement('td');tdNights.textContent=entry.nights_won;const tdTime=document.createElement('td');tdTime.textContent=formatDate(entry.achieved_at);tr.append(tdRank,tdName,tdScore,tdNights,tdTime);tbody.append(tr);});table.append(tbody);panel.append(table);}}catch(err){loading.textContent=`Lỗi tải bảng điểm: ${err.message}`;}panel.append(backBtn);panel.style.display='flex';}
+function showFinalResultScreen(isWonNight3){panel.replaceChildren();const title=isWonNight3?'BÌNH MINH — CHIẾN THẮNG!':`THUA ĐÊM ${night}`;const h=document.createElement('h2');h.textContent=title;panel.append(h);const wonCount=wonScores.filter(s=>typeof s==='number').length;const totalWon=wonScores.reduce((sum,s)=>sum+(s||0),0);const summary=document.createElement('p');summary.style.fontSize='18px';summary.textContent=`Tổng điểm hành trình: ${totalWon} điểm · ${wonCount} Đêm thắng`;panel.append(summary);const saveContainer=document.createElement('div');saveContainer.style.display='flex';saveContainer.style.flexDirection='column';saveContainer.style.alignItems='center';saveContainer.style.gap='8px';const msg=document.createElement('div');msg.style.minHeight='22px';if(!scoreSubmitted){const inputRow=document.createElement('div');inputRow.style.display='flex';inputRow.style.gap='10px';inputRow.style.alignItems='center';const input=document.createElement('input');input.type='text';input.id='player-name';input.placeholder='Tên (3–12 ký tự)';input.maxLength=12;const saveBtn=document.createElement('button');saveBtn.textContent='Lưu điểm';const doSubmit=async()=>{if(scoreSubmitted||saveBtn.disabled)return;const name=input.value.trim();if(!/^[A-Za-z0-9_]{3,12}$/.test(name)){msg.textContent='Tên cần có 3–12 ký tự, chỉ gồm chữ không dấu, số và _';msg.className='error';return;}saveBtn.disabled=true;saveBtn.textContent='Đang lưu...';try{const res=await fetch('/api/leaderboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,score:totalWon,nights_won:wonCount,seed:42})});const resData=await res.json();if(!res.ok)throw new Error(resData.error||'Lỗi khi lưu điểm');scoreSubmitted=true;input.disabled=true;saveBtn.remove();msg.textContent=`Đã lưu điểm cho ${name}!`;msg.className='success';}catch(err){saveBtn.disabled=false;saveBtn.textContent='Lưu điểm';msg.textContent=err.message;msg.className='error';}};saveBtn.onclick=doSubmit;input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();doSubmit();}};inputRow.append(input,saveBtn);saveContainer.append(inputRow);}else{msg.textContent='Điểm của bạn đã được ghi nhận.';msg.className='success';}saveContainer.append(msg);panel.append(saveContainer);const actions=document.createElement('div');actions.className='row-actions';if(!isWonNight3){const retryBtn=document.createElement('button');retryBtn.textContent='Chơi lại Đêm';retryBtn.onclick=restart;actions.append(retryBtn);}const lbBtn=document.createElement('button');lbBtn.textContent='Bảng xếp hạng';lbBtn.onclick=()=>showLeaderboard(()=>showFinalResultScreen(isWonNight3));actions.append(lbBtn);const menuBtn=document.createElement('button');menuBtn.textContent='Về menu';menuBtn.onclick=menu;actions.append(menuBtn);panel.append(actions);panel.style.display='flex';}
 function intro(){screen='intro';showPanel(`Đêm ${night} — ${['Đảo Bến','Cầu Tre','Tháp Chuông'][night-1]}`,[['Ông Đăng: Giữ đảo sáng tới bình minh. Bắt đầu!',()=>{startAudio();restart();}]]);}
-function menu(){screen='menu';showPanel('ĐẢO ĐÈN LỒNG',[['Bắt đầu hành trình',()=>{night=1;totalScore=0;intro();}],['Cài đặt',()=>showSettings(menu)]]);}
+function menu(){screen='menu';showPanel('ĐẢO ĐÈN LỒNG',[['Bắt đầu hành trình',()=>{night=1;wonScores=[null,null,null];scoreSubmitted=false;intro();}],['Bảng xếp hạng',()=>showLeaderboard(menu)],['Cài đặt',()=>showSettings(menu)]]);}
 function showSettings(back){showPanel('Cài đặt',[['Quay lại',back]]);for(const [key,label,min,max,stepValue]of [['volume','Âm lượng',0,1,.05],['sensitivity','Độ nhạy chuột',.2,3,.1]]){const row=document.createElement('label');row.textContent=label;const range=document.createElement('input');range.type='range';range.min=min;range.max=max;range.step=stepValue;range.value=settings[key];range.oninput=()=>{settings[key]=Number(range.value);saveSettings();};row.append(range);panel.append(row);}
   const row=document.createElement('label');row.textContent='Bảng màu dễ phân biệt';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='colorblind-setting';checkbox.checked=settings.colorblind;checkbox.onchange=()=>{settings.colorblind=checkbox.checked;saveSettings();document.documentElement.dataset.colorblind=String(settings.colorblind);};row.append(checkbox);panel.append(row);
+  for(const [key,label]of [['reducedMotion','Giảm chuyển động'],['largeText','Chữ lớn ×1.25']]){const row=document.createElement('label');row.textContent=label;const input=document.createElement('input');input.type='checkbox';input.id=key;input.checked=settings[key];input.onchange=()=>{settings[key]=input.checked;saveSettings();applyAccessibility();};row.append(input);panel.append(row);}
+  const heading=document.createElement('h3');heading.textContent='Đổi phím';panel.append(heading);
+  const error=document.createElement('p');error.id='binding-error';error.setAttribute('role','status');panel.append(error);
+  for(const [action,label]of Object.entries(ACTION_LABELS)){const row=document.createElement('label');row.textContent=label;const button=document.createElement('button');button.dataset.action=action;button.textContent=settings.bindings[action];button.onclick=()=>{bindingToCapture={action,button,error};button.textContent='Nhấn phím mới…';};row.append(button);panel.append(row);}
+  const reset=document.createElement('button');reset.textContent='Khôi phục mặc định';reset.id='reset-bindings';reset.onclick=()=>{settings.bindings={...DEFAULT_BINDINGS};bindingToCapture=null;saveSettings();showSettings(back);};panel.append(reset);
 }
 function pauseMenu(){showPanel('Tạm dừng',[['Tiếp tục',()=>togglePause()],['Chơi lại Đêm',restart],['Cài đặt',()=>showSettings(pauseMenu)],['Về menu',menu]]);}
 function togglePause(){if(screen!=='playing')return;const input={...INITIAL_INPUT,pause:true};step(game,input,INITIAL_INPUT);previousInput={...INITIAL_INPUT};keyboard.clear();if(game.state==='paused')pauseMenu();else{panel.style.display='none';focusGame();}}
 const keyboard = new KeyboardInput();
 window.addEventListener('keydown', event => {
   const code=physicalKey(event);
-  if(!GAME_KEYS.has(code)||screen!=='playing')return;
+  if(bindingToCapture){event.preventDefault();event.stopPropagation();if(!code)return;const {action,button,error}=bindingToCapture;try{settings.bindings=rebind(settings.bindings,action,code);saveSettings();button.textContent=code;error.textContent='Đã lưu phím';bindingToCapture=null;}catch(e){error.textContent=e.message;}return;}
+  if(!code||screen!=='playing')return;
   if(event.target instanceof HTMLInputElement)return;
+  const accepted=new Set([...Object.values(settings.bindings),'ArrowLeft','ArrowRight','KeyR','KeyF','KeyP','ShiftRight']);if(!accepted.has(code))return;
   event.preventDefault();
-  if(['Escape','KeyP'].includes(code)){if(!event.repeat)togglePause();return;}
-  if(code==='KeyR'){if(!event.repeat)restart();return;}
+  if(actionDown(new Set([code]),settings.bindings,'pause')){if(!event.repeat)togglePause();return;}
+  if(code==='KeyR'&&!Object.values(settings.bindings).includes(code)){if(!event.repeat)restart();return;}
   if(game.state==='playing')keyboard.press(code);
 },true);
 window.addEventListener('keyup', event => {const code=physicalKey(event);if(code)keyboard.release(code);},true);
@@ -184,20 +212,23 @@ function restart() {
   screen='playing';panel.style.display='none';keyboard.clear();focusGame();
   previousInput = { ...INITIAL_INPUT };
   pulseFlash = 0;
+  scoreSubmitted = false;
+  recentSpawn=null;
   document.querySelector('#message').style.display = 'none';
 }
 function currentInput() {
   const keys=keyboard.sample();
-  if (keys.has('ArrowLeft')) cameraYaw += 1.5;
-  if (keys.has('ArrowRight')) cameraYaw -= 1.5;
+  if (keys.has('ArrowLeft')&&!Object.values(settings.bindings).includes('ArrowLeft')) cameraYaw += 1.5;
+  if (keys.has('ArrowRight')&&!Object.values(settings.bindings).includes('ArrowRight')) cameraYaw -= 1.5;
   return {
     // The camera looks along +Z at yaw 0, so screen-right is world -X.
-    move: [Number(keys.has('KeyA')) - Number(keys.has('KeyD')), Number(keys.has('KeyW')) - Number(keys.has('KeyS'))],
+    move: [Number(actionDown(keys,settings.bindings,'left'))-Number(actionDown(keys,settings.bindings,'right')),Number(actionDown(keys,settings.bindings,'forward'))-Number(actionDown(keys,settings.bindings,'backward'))],
     cam_yaw_deg: cameraYaw,
-    jump: keys.has('Space'), interact: keys.has('KeyE')||keys.has('KeyF'), pulse: keys.has('KeyQ'), dash:keys.has('ShiftLeft')||keys.has('ShiftRight'),
+    jump:actionDown(keys,settings.bindings,'jump'),interact:actionDown(keys,settings.bindings,'interact'),pulse:actionDown(keys,settings.bindings,'pulse'),dash:actionDown(keys,settings.bindings,'dash'),
   };
 }
 function updateHud() {
+  applyAccessibility();updateCues();
   document.documentElement.dataset.colorblind=String(settings.colorblind);
   document.querySelector('#hud h1').textContent=`ĐẢO ĐÈN LỒNG · ĐÊM ${night}`;
   document.querySelector('#flames').textContent = game.player.flames;
@@ -230,8 +261,13 @@ function updateHud() {
   if (game.state !== 'playing') {
     if(game.state==='paused')return;
     screen='result';sound(game.state);
-    if(game.state==='won'){totalScore+=game.score;if(night===3)showPanel(`BÌNH MINH — Tổng điểm ${totalScore}`,[['Về menu',menu]]);else showPanel(`Thắng Đêm ${night} · ${game.score} điểm`,[['Đêm tiếp theo',()=>{night++;intro();}]]);}
-    else showPanel(`Thua Đêm ${night}`,[['Chơi lại Đêm',restart],['Về menu',menu]]);
+    if(game.state==='won'){
+      wonScores[night-1]=game.score;
+      if(night===3)showFinalResultScreen(true);
+      else showPanel(`Thắng Đêm ${night} · ${game.score} điểm`,[['Đêm tiếp theo',()=>{night++;intro();}],['Về menu',menu]]);
+    } else {
+      showFinalResultScreen(false);
+    }
   }
 }
 function render(time) {
@@ -243,8 +279,9 @@ function render(time) {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   const yaw = cameraYaw * Math.PI / 180;
   const p = game.player.pos;
-  const eye = [p[0] - Math.sin(yaw) * 15, p[1] + 12, p[2] - Math.cos(yaw) * 15];
-  const target = [p[0], p[1] + 0.7, p[2]];
+  const orbit=(time-benchmarkState.firstFrameTime)/15000*Math.PI*2;
+  const eye = benchmarkMode?[30*Math.cos(orbit),15,30*Math.sin(orbit)]:[p[0] - Math.sin(yaw) * 15, p[1] + 12, p[2] - Math.cos(yaw) * 15];
+  const target = benchmarkMode?[0,0,0]:[p[0], p[1] + 0.7, p[2]];
   viewProjection = multiply(perspective(width / height), lookAt(eye, target));
 
   const litFraction = game.lanterns.filter(lantern => lantern.lit).length / TUNING.lantern_count_night1;
@@ -268,7 +305,7 @@ function render(time) {
       draw(disk, [lantern.pos[0], lantern.pos[1]+0.02, lantern.pos[2]], [1.5, 1, 1.5], [1, .78, .3, .4]);
     }
   }
-  if (pulseFlash > 0) draw(disk, [p[0], 0.03, p[2]], [TUNING.pulse_radius, 1, TUNING.pulse_radius], [1, .8, .3, .15 * pulseFlash / 20]);
+  if (pulseFlash > 0&&!settings.reducedMotion) draw(disk, [p[0], p[1]+0.03, p[2]], [TUNING.pulse_radius, 1, TUNING.pulse_radius], [1, .8, .3, .15 * pulseFlash / 20]);
   gl.depthMask(true);
 
   for (const lantern of game.lanterns) {
@@ -318,15 +355,18 @@ function render(time) {
 let lastTime = 0, accumulator = 0;
 let nextHudAt=0;
 function frame(now) {
+  if(benchmarkMode&&!benchmarkState.first_frame_epoch){benchmarkState.first_frame_epoch=Date.now();benchmarkState.firstFrameTime=now;}
   if (!lastTime) lastTime = now;
   accumulator = Math.min(.25, accumulator + (now - lastTime) / 1000);
   lastTime = now;
   fpsFrames++;if(now-fpsTime>=1000){averageFps=fpsFrames*1000/(now-fpsTime);fpsFrames=0;fpsTime=now;canvas.dataset.fps=averageFps.toFixed(1);}
   while (accumulator >= 1 / 60) {
-    if (screen==='playing'&&game.state === 'playing') {
+    if(benchmarkMode){if(!benchmarkState.done)stepBenchmark(game);}
+    else if (screen==='playing'&&game.state === 'playing') {
       const input = currentInput();
       if(input.jump&&!previousInput.jump&&game.player.grounded)sound('jump');
       const events = step(game, input, previousInput);
+      for(const event of events)if(event.name==='shade_spawned')recentSpawn={id:event.data.id,until:game.simTick+300};
       for(const event of events)sound(event.name);
       const sec=Math.ceil(game.timeLeft);if(sec<=10&&Math.ceil(game.timeLeft+1/60)!==sec)sound('countdown');
       if(night===3&&game.simTick%1800===1680)sound('wind');
@@ -340,13 +380,23 @@ function frame(now) {
   // Keep DOM work out of the fixed-step loop to reduce long input frames.
   if(screen==='playing'&&(now>=nextHudAt||['won','lost'].includes(game.state))){updateHud();nextHudAt=now+100;}
   render(now);
+  if(benchmarkMode&&!benchmarkState.done){
+    if(now-benchmarkState.firstFrameTime>=3000){
+      if(!benchmarkState.measureStart){benchmarkState.measureStart=now;benchmarkState.last=now;}
+      else if(now-benchmarkState.measureStart<=benchmarkDuration*1000){benchmarkState.times.push(now-benchmarkState.last);benchmarkState.last=now;}
+      else{benchmarkState.metrics=frameMetrics(benchmarkState.times);benchmarkState.done=true;}
+    }
+  }
   requestAnimationFrame(frame);
 }
 updateHud();
+applyAccessibility();
 menu();
+if(benchmarkMode){screen='benchmark';panel.style.display='none';settings.reducedMotion=false;settings.largeText=false;settings.colorblind=false;}
 const previewNight=Number(new URLSearchParams(location.search).get('night'));
 if([1,2,3].includes(previewNight)){night=previewNight;intro();}
 requestAnimationFrame(frame);
 
 // Read-only observation for browser integration checks.
-export function inspectGame(){return {...snapshot(game),screen,averageFps};}
+export function inspectGame(){return {...snapshot(game),screen,averageFps,journey:{scores:[...wonScores],nights_won:wonScores.filter(s=>typeof s==='number').length,score:wonScores.reduce((sum,s)=>sum+(s??0),0)}};}
+export function inspectBenchmark(){return{done:benchmarkState.done,metrics:benchmarkState.metrics,frame_times_ms:benchmarkState.done?benchmarkState.times:undefined,first_frame_epoch:benchmarkState.first_frame_epoch,scene:{night:game.night,shades:game.shades.length,motes:game.motes.length,states:[...new Set(game.shades.map(s=>s.state))],player:game.player.pos,lanterns:game.lanterns.map(l=>({id:l.id,lit:l.lit,fuel:fuelValue(l)})),camera:{radius:30,height:15,initial:[30,15,0],seconds_per_orbit:15},frozen:['spawn','damage','pickup','fuel','game_over'],creative_extras:false}};}

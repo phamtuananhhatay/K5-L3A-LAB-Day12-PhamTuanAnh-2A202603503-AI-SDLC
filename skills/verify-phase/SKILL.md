@@ -22,3 +22,15 @@ description: Kiểm chứng Đảo Đèn Lồng Phase3, hồi quy và lưu bằn
 6. Ghi cấu hình máy và giải thích vsync/RSS nếu bản web có giới hạn.
 7. Thử bản clone sạch và gói phát hành.
 8. Cập nhật checklist bằng kết quả thật; không sửa tay số đo.
+
+Lệnh Phase4 đang dùng:
+
+- node tests/phase4/verify.mjs
+- node tests/phase4/leaderboard.mjs
+- node tests/phase4/browser.mjs
+- node scripts/bench.mjs --seed 42 --duration 30 --out bench.json
+- node --expose-gc scripts/soak.mjs --seed 7 --nights 10 --out soak.json
+- node tests/phase4/media.mjs
+- node scripts/package.mjs
+
+Kiểm tra lại các công thức từ bench.frames.json, schema p1_low_fps/contract_version/os. Không báo hoàn thành Release chỉ vì có ZIP/tag cục bộ; phải xác minh trạng thái GitHub sau khi được phép xuất repo.

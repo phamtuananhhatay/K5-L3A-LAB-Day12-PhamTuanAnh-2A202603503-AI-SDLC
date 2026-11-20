@@ -6,7 +6,7 @@ const contract = JSON.parse(await readFile(new URL('../game.contract.json', impo
 if (JSON.stringify(contract.tuning) !== JSON.stringify(TUNING)) {
   throw new Error('game.contract.json tuning differs from the shared game logic');
 }
-for (const file of ['src/core.mjs', 'src/maps.mjs', 'src/audio.mjs', 'src/input.mjs', 'src/headless.mjs', 'src/game.mjs', 'scripts/serve.mjs']) {
+for (const file of ['src/core.mjs', 'src/maps.mjs', 'src/audio.mjs', 'src/input.mjs', 'src/controls.mjs', 'src/benchmark.mjs', 'src/leaderboard.mjs', 'src/headless.mjs', 'src/game.mjs', 'scripts/serve.mjs','scripts/bench.mjs','scripts/soak.mjs']) {
   const result = spawnSync(process.execPath, ['--check', file], { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }

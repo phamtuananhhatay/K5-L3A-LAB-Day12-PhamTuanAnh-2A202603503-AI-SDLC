@@ -1,5 +1,18 @@
 # Changelog
 
+## Phase 4 — Contract1.3 — v1.0.0
+
+- Benchmark chuẩn200wander/100mote, camera quỹ đạo30m/15s, warmup3s; đo dt thật, schema p1_low_fps, contract_version và os đúng ticket; raw frames/cấu hình cảnh được lưu.
+- Soak10Đêm cùng tiến trình, seed7…16, input xác suất chuẩn, RSS trước/sau reset. Không thay luật gameplay1.2.
+- Bảng điểm cục bộ top10, tên đúng quy tắc, điểm các Đêm thắng, lưu bền vững và export cùng nguồn dữ liệu; chống submit lặp và ghi file tuần tự.
+- Đổi phím9hành động, báo trùng/reset/lưu; chỉ báo hình ảnh; reduced motion; chữ≥18px và×1.25.
+- Dùng lại typed render buffers để giảm GC spikes ở scene200shade.
+- README/credits/license/retro/demo, gói ZIP và tài liệu bản phát hành.
+
+## Phase 1 — Contract1.0
+
+- Đêm1 tối thiểu, core dùng chung WebGL/headless, nhặt/nạp/pulse/hit, thắng/thua, scenario và JSONL tất định. Các số tự chọn ban đầu được thay chuẩn trong Phase2.
+
 ## Sửa điều khiển sau tag phase-3
 
 - Đệm lần nhấn nhanh giữa hai tick để không mất input; giữ trạng thái phím cho tới keyup, không phụ thuộc nhịp lặp của bàn phím.

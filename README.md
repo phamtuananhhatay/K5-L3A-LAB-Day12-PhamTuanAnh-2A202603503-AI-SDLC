@@ -1,4 +1,46 @@
-# Đảo Đèn Lồng — Phase 3 · Đèn cạn dầu
+# Đảo Đèn Lồng v1.0.0 — Phase 4
+
+[▶ Video demo MP4 dưới5phút](docs/demo/demo.mp4) · [Báo cáo phát hành](PHASE-4-REPORT.md) · [Retro4phase](docs/notes/RETRO.md)
+
+![Ảnh bản chơi](docs/proof/phase-3/refueled.png)
+
+Yêu cầu hệ thống: Node.js22+; trình duyệt WebGL2 (Chrome/Edge/Chromium hoặc trình duyệt tương đương), màn hình1280×720 trở lên. Windows/macOS/Linux. Lệnh bench cần Chrome/Chromium đã cài; đặt biến CHROME_PATH nếu không tìm được. Không cần npm install hoặc thư viện bên ngoài. Gói web trong Release có cùng cách chạy2lệnh bên dưới. Dữ liệu cá nhân bảng điểm không nằm trong gói.
+
+## Bổ sung Phase 4
+
+- Menu có Bảng xếp hạng. Sau khi thua hoặc thắng Đêm3, nhập tên3–12ký tự A–Z/a–z/0–9/_ để lưu tổng điểm các Đêm thắng. Top10 lưu tại data/leaderboard.json, còn sau đóng/mở; CLI export dùng cùng file.
+- Cài đặt đổi được mọi phím, phát hiện trùng, khôi phục mặc định và lưu lại; hỗ trợ bộ gõ bằng mã phím vật lý. Giảm chuyển động tắt flash, không có camera shake; chữ mặc định18px và chữ lớn22.5px.
+- Chỉ báo hình ảnh cho shade spawn/hướng ở mép, gió báo trước,10s cuối và đèn yếu. Cài đặt màu từ Phase3 tiếp tục được lưu.
+
+### Test, headless, benchmark, soak và xuất bảng điểm
+
+```bash
+node tests/phase1/verify.mjs
+node tests/phase4/verify.mjs
+node tests/phase4/leaderboard.mjs
+node tests/phase4/browser.mjs
+node src/headless.mjs --seed 42 --night 1 --ticks 600 --out headless.jsonl
+node scripts/bench.mjs --seed 42 --duration 30 --out bench.json
+node --expose-gc scripts/soak.mjs --seed 7 --nights 10 --out soak.json
+node scripts/serve.mjs --export-leaderboard out.json
+```
+
+Bench mở cửa sổ1280×720, camera chuẩn, đúng200wander/100mote/3đèn100dầu. Bỏ3s khởi động rồi đo30s. Chỉ cảnh bench tắt spawn/hit/pickup/fuel/game-over, giữ hiệu ứng và ánh sáng thật. Bench/soak không thêm thực thể hoặc hiệu ứng sáng tạo ngoài lõi. bench.frames.json chứa dt thật để tính lại số đo; bench.scene.json ghi cấu hình cảnh.
+
+Web requestAnimationFrame chịu vsync của trình duyệt/màn hình; không tắt được qua ứng dụng nên vsync_off=false. peak_mem_mb=null vì trình duyệt chạy nhiều tiến trình, không có API web đo RSS toàn renderer một cách tin cậy. Soak đo RSS Node trong cùng tiến trình; --expose-gc cho phép GC tại cả hai mốc đo đối xứng, không khởi tạo tiến trình cho mỗi Đêm. Seed đêm đầu7, sau đó8…16 (i bắt đầu0). Các xác suất hành động độc lập theo tick, không phát input pause.
+
+Giới hạn đo: số trên máy này chỉ để tham khảo; máy chấm của giảng viên mới quyết định ngưỡng. Chưa xác nhận trực tiếp trên macOS/Linux, nhưng runtime game dùng Node/WebGL thuần. Test browser tự dùng dữ liệu bảng điểm tạm, không sửa dữ liệu người chơi.
+
+### Tạo gói và kiểm tra demo
+
+```bash
+node scripts/package.mjs
+node tests/phase4/media.mjs
+```
+
+Gói: dist/dao-den-long-v1.0.0-web.zip. Giải nén, mở terminal trong thư mục gói, chạy build rồi serve. Tài liệu/retro và video có trong docs. Video do MediaRecorder quay canvas game thật, có phụ đề và output tiến trình test thật; phần bench/soak trình bày kết quả đo thật đã lưu, không giả là một lượt chơi3Đêm hoàn chỉnh. Không có lời dẫn âm thanh.
+
+---
 
 Game 3D ba Đêm, WebGL2 + JavaScript thuần. Mây phải **giữ đảo sáng tới bình minh**: cuối Đêm còn sống và ít nhất3/5,4/6,5/7đèn sáng. Thắp hết đèn không thắng sớm. Logic bản chơi và headless dùng chung `src/core.mjs`.
 

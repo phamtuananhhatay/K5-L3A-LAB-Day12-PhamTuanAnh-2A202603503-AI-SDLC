@@ -1,0 +1,83 @@
+COMMAND node scripts/build.mjs
+EXIT 0
+PASS: source syntax and Test Contract tuning
+
+COMMAND node tests/phase1/verify.mjs
+EXIT 0
+PASS keyboard taps, hold/release, diagonal, focus reset and IME physical-key mapping
+PASS: three map layouts, exact edges, bridge, tiers and ramps
+PASS dash (values + byte determinism)
+PASS pause (values + byte determinism)
+PASS resume (values + byte determinism)
+PASS charm (values + byte determinism)
+PASS steal (values + byte determinism)
+PASS drifter-drop (values + byte determinism)
+PASS fall (values + byte determinism)
+PASS hit-drop (values + byte determinism)
+PASS pulse (values + byte determinism)
+PASS deposit (values + byte determinism)
+PASS shade-spawn (values + byte determinism)
+PASS drifter-spawn (values + byte determinism)
+PASS wind (values + byte determinism)
+PASS pad (values + byte determinism)
+PASS invalid inputs/scenarios: duplicate ticks, move range, shade state, pause type, malformed JSON
+PASS 14 phase-2 scenarios + standardized regression checks
+PASS standardized regression: yaw, capacity, partial deposit/persistence, respawn, both pads, aerial dash, boundary, held pulse, charm cooldown
+PASS scenario-default (values/events/schema + identical bytes)
+PASS decay (values/events/schema + identical bytes)
+PASS out (values/events/schema + identical bytes)
+PASS first-light (values/events/schema + identical bytes)
+PASS relight (values/events/schema + identical bytes)
+PASS out-and-relight (values/events/schema + identical bytes)
+PASS refuel (values/events/schema + identical bytes)
+PASS partial-refuel (values/events/schema + identical bytes)
+PASS no-early-win (values/events/schema + identical bytes)
+PASS dawn-won (values/events/schema + identical bytes)
+PASS dawn-lost (values/events/schema + identical bytes)
+PASS out-at-dawn (values/events/schema + identical bytes)
+PASS dead-at-dawn (values/events/schema + identical bytes)
+PASS single-drain (values/events/schema + identical bytes)
+PASS double-drain (values/events/schema + identical bytes)
+PASS enter-drain (values/events/schema + identical bytes)
+PASS pulse-drain (values/events/schema + identical bytes)
+PASS restore-safe-zone (values/events/schema + identical bytes)
+PASS pause-oil (values/events/schema + identical bytes)
+PASS max-capacity (values/events/schema + identical bytes)
+PASS night2-threshold (values/events/schema + identical bytes)
+PASS night3-threshold (values/events/schema + identical bytes)
+PASS relight-at-dawn (values/events/schema + identical bytes)
+PASS night2-below-threshold (values/events/schema + identical bytes)
+PASS night3-below-threshold (values/events/schema + identical bytes)
+PASS full lamp excluded; nearest eligible and ID tie-break
+PASS safe threshold uses exact unrounded fuel
+PASS wander selects nearest weak lamp, chase retains player
+PASS drain exits for player, extinguished target, range, restored fuel; stun recovers to wander
+PASS capacity grows on relight and resets next night
+PASS integer decay extinguishes once at exactly tick6000
+PASS drain event cadence and safe-zone restoration within30 ticks
+PASS invalid new scenario fields return code2
+Phase3: 33 checks passed
+
+COMMAND node tests/phase4/verify.mjs
+EXIT 0
+PASS Phase4 benchmark scene/freeze, deterministic population, exact frame metric formulas, rebinding and conflict validation
+
+COMMAND node tests/phase4/leaderboard.mjs
+EXIT 0
+--- Phase 4 Task 2: Leaderboard Tests ---
+PASS 1. Name validation rejects < 3 chars, > 12 chars, spaces, and special symbols
+PASS 2. addEntry validates score, nights_won, and seed types and bounds
+PASS 3. sortEntries: score desc, then achieved_at asc (earlier wins, non-alphabetical)
+PASS 4. Capacity: adding 12 entries keeps only top 10
+PASS 5. Journey scores: won nights summed, lost night points excluded
+PASS 6. Concurrent saves do not drop writes or corrupt JSON
+PASS 7. Missing file (ENOENT) returns empty entries array
+PASS 8. Corrupted JSON file throws error and preserves file
+PASS 9. CLI --export-leaderboard outputs formatted top 10 JSON
+PASS 10. CLI --export-leaderboard without path exits with code 1
+PASS 11. HTTP API: GET and POST /api/leaderboard
+PASS 12. Default data/leaderboard.json is valid and exports cleanly
+
+========================================
+Phase 4 Leaderboard: All 12 tests PASSED!
+========================================

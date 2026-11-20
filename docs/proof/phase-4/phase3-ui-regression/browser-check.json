@@ -1,0 +1,18 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "canvas_keyboard_focus": true,
+  "quick_tap_received": true,
+  "physical_W_with_composing_key": true,
+  "hold_and_release": true,
+  "colorblind_persisted": true,
+  "warning_white_and_icon": true,
+  "capacity_hud": true,
+  "refuel": true,
+  "pause_freezes_fuel": true,
+  "frames": 430,
+  "seconds": 3.004,
+  "average_fps": 143.14247669773636
+}

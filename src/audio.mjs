@@ -1,6 +1,8 @@
 let context, gain, musicTimer;
+import {DEFAULT_BINDINGS,validateBindings} from './controls.mjs';
 function loadSettings(){try{return JSON.parse(localStorage.getItem('lantern-settings')||'null')??{};}catch{return {};}}
-export const settings = {volume:.35,sensitivity:1,colorblind:false,...loadSettings()};
+export const settings = {volume:.35,sensitivity:1,colorblind:false,reducedMotion:false,largeText:false,bindings:{...DEFAULT_BINDINGS},...loadSettings()};
+try{validateBindings(settings.bindings);}catch{settings.bindings={...DEFAULT_BINDINGS};}
 export function saveSettings(){localStorage.setItem('lantern-settings',JSON.stringify(settings));if(gain)gain.gain.value=settings.volume;}
 function init(){if(!context){context=new AudioContext();gain=context.createGain();gain.gain.value=settings.volume;gain.connect(context.destination);}context.resume();}
 function tone(frequency,duration=.12,type='sine',level=.15){if(!context)return;const o=context.createOscillator(),g=context.createGain();o.type=type;o.frequency.value=frequency;g.gain.setValueAtTime(level,context.currentTime);g.gain.exponentialRampToValueAtTime(.001,context.currentTime+duration);o.connect(g);g.connect(gain);o.start();o.stop(context.currentTime+duration);}

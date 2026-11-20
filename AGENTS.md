@@ -8,6 +8,9 @@
 - Giao diện bảng điểm và lệnh export phải dùng cùng nguồn dữ liệu.
 - Bằng chứng Phase 4 lưu riêng, không ghi đè bằng chứng các tag trước.
 - Chỉ khai bench_cmd/soak_cmd chính thức khi các lệnh đã chạy được.
+- Contract chính thức hiện1.3: bench=node scripts/bench.mjs; soak=node --expose-gc scripts/soak.mjs. Không dùng benchmark headless Phase3 để thay scene đồ họa Phase4.
+- Chạy thêm node tests/phase4/verify.mjs, node tests/phase4/leaderboard.mjs và node tests/phase4/browser.mjs sau sửa tính năng phát hành. Không dùng dữ liệu bảng điểm thật cho test.
+- p1_low_fps là tên trường chuẩn. bench.frames.json là dt thật; peak_mem_mb=null và vsync_off=false có giải thích trong README cho web.
 - Không ghi Đạt khi thiếu bằng chứng hoặc có kiểm tra liên quan đang lỗi.
 - Logic gameplay nằm trong `src/core.mjs`; cả trình duyệt và headless phải dùng chung `createGame` và `step`.
 - Sau khi đổi thông số, cập nhật `game.contract.json` cùng lúc; `node scripts/build.mjs` kiểm tra chúng khớp nhau.

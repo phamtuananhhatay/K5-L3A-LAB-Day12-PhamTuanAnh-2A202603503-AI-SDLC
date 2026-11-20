@@ -4,7 +4,7 @@ import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve,sep} from 'node:path';
 
-const output='docs/proof/phase-3';await mkdir(output,{recursive:true});
+const output='docs/proof/phase-4/phase3-ui-regression';await mkdir(output,{recursive:true});
 const profile=await mkdtemp(join(tmpdir(),'lantern-phase3-browser-'));
 const port=4184,base=`http://127.0.0.1:${port}`;
 let chrome,ws,server;
@@ -22,7 +22,7 @@ try{
  const evaluate=async expression=>{const result=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},sessionId);if(result.exceptionDetails)throw new Error(JSON.stringify(result.exceptionDetails));return result.result.value;};
  async function ready(){for(let i=0;i<100;i++){try{if(await evaluate(`Boolean(document.querySelector('#flow button'))`))return;}catch{}await wait(50);}throw new Error('Game UI did not load');}
  await send('Emulation.setDeviceMetricsOverride',{width:1280,height:720,deviceScaleFactor:1,mobile:false},sessionId);await ready();
- await evaluate(`document.querySelectorAll('#flow button')[1].click();document.querySelector('#colorblind-setting').click();true`);
+ await evaluate(`[...document.querySelectorAll('#flow button')].find(b=>b.textContent==='Cài đặt').click();document.querySelector('#colorblind-setting').click();true`);
  assert.equal(await evaluate(`JSON.parse(localStorage.getItem('lantern-settings')).colorblind`),true);
  await send('Page.navigate',{url:`${base}/?scene=fuel&night=1`},sessionId);await wait(300);await ready();
  await evaluate(`document.querySelector('#flow button').click();true`);await wait(200);
