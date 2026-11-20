@@ -1,0 +1,13 @@
+{
+  "source_commit": "48fceee",
+  "method": "git clone --no-hardlinks into an independent ignored workspace directory",
+  "commands": ["node scripts/build.mjs", "node tests/phase1/verify.mjs", "node tests/phase4/verify.mjs", "node tests/phase4/leaderboard.mjs", "node scripts/smoke.mjs"],
+  "exit_code": 0,
+  "build": "PASS",
+  "retained_phase1_to_phase3_regression": "PASS, including33 Phase3 checks",
+  "phase4_scene_formulas_controls": "PASS",
+  "leaderboard_api_cli": "12 checks PASS",
+  "local_server_smoke": "PASS",
+  "environment": "Windows, Node.js v24.12.0, no third-party packages. Normal local execution needed because sandbox blocked Git MSYS and loopback with EACCES.",
+  "release_zip_extraction": "Independently extracted ZIP passed build, smoke and12 leaderboard/API/CLI checks."
+}

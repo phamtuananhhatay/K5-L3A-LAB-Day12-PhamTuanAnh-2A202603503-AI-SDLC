@@ -23,6 +23,8 @@ Core gameplay và số liệu Phase3 được giữ nguyên. Contract1.3 thêm l
 
 ## Các lệnh tái hiện
 
+Clone sạch commit `48fceee` đã chạy build, toàn bộ hồi quy, test Phase4,12test bảng điểm và smoke thành công, exit0. [Bằng chứng](docs/proof/phase-4/clean-clone.json). Không dùng node_modules hoặc dữ liệu bảng điểm từ workspace gốc.
+
 ```bash
 node scripts/build.mjs
 npm test
