@@ -4,36 +4,36 @@ Nguồn: [PRD-0 và Test Contract v1.0](../requirements/PRD-0.txt) do người l
 
 ## A. Bản chơi Đêm 1
 
-| ID | Yêu cầu PRD-0 | Điểm chưa rõ / giả định | Cách chứng minh |
-|---|---|---|---|
-| P1-01 | Game 3D tên Đảo Đèn Lồng; một màn Đêm 1 – Đảo Bến, đảo tròn có **5** Đèn Lồng Lớn. | Bán kính đảo, vị trí mặc định của L1…L5 tự chọn. | Chơi thử cảnh 3D, đếm 5 đèn; snapshot headless có L1…L5. |
-| P1-02 | Điều khiển Mây đi lại, nhảy, camera 3D. Mây đội nón lá có đèn lồng nhỏ. | Phím điều khiển, chiều cao nhảy và góc camera tự chọn; headless phải tuân công thức di chuyển của contract. | Chơi thử đi/nhảy/quay camera; scenario di chuyển với yaw 0° và 90°, đo tọa độ. |
-| P1-03 | Đom đóm rải trên đảo và nhặt được. | Số và vị trí mặc định, `pickup_radius`, lượng nhặt, giới hạn mang tự chọn. | Scenario mote gần/ngoài bán kính; kiểm tra `mote_picked`, `carried`, `motes_active`. |
-| P1-04 | Mang ánh sáng đến nạp và thắp Đèn Lồng Lớn. | `lantern_cost`, `interact_radius`, lượng nạp mỗi lần tự chọn. | Scenario đèn ở gần/xa, khi đủ/thiếu ánh sáng; kiểm tra `deposit`, `lantern_lit` và trạng thái đèn. |
-| P1-05 | Bóng Mực xuất hiện và đuổi Mây. | Số lượng/vị trí mặc định, tốc độ và AI đuổi tự chọn. | Scenario một Bóng Mực, không input; khoảng cách ngang tới Mây giảm trong snapshot. |
-| P1-06 | Bóng Mực chạm Mây làm Mây mất máu. | Sát thương và thời gian bất tử sau trúng đòn tự chọn; contract dùng `flames` làm lượng sống. | Scenario Bóng Mực chạm Mây; kiểm tra `player_hit`, `flames`, thời gian bất tử. |
-| P1-07 | Mây tỏa sáng để xua Bóng Mực và tốn ánh sáng. | Chọn chi phí từ `carried` (đom đóm đang mang), không trừ `flames`; radius, stun, push, cooldown tự chọn. | Scenario pulse khi đủ/thiếu `carried`, Bóng Mực trong/ngoài radius; kiểm tra `pulse`, `stunned_ids`, vị trí và `carried`. |
-| P1-08 | Bóng Mực sợ những chiếc đèn. | Chọn vùng an toàn chỉ quanh đèn **đã thắp**; `safe_radius` tự chọn. | Scenario đèn sáng/tắt, Bóng Mực tiến gần; kiểm tra nó không vào vùng an toàn khi đèn sáng. |
-| P1-09 | Thắp hết đèn thì thắng; hết máu thì thua. | Đêm hết giờ gây thua với `reason: dawn` theo contract. Chọn ưu tiên kết quả nếu các điều kiện cùng xảy ra trong một bước. | Scenario thắp L5, hết `flames`, hết giờ; kiểm tra `game_over`, end và dừng sớm. |
-| P1-10 | Có điểm số và HUD; chơi lại được sau thắng/thua. | Cách cộng điểm tự chọn và khai báo trong `score.*`; vị trí HUD, phím chơi lại tự chọn. | Chơi thử HUD và restart; scenario từng sự kiện rồi kiểm tra `score`. |
-| P1-11 | Cảm giác đêm ấm áp, cổ tích; đảo sáng dần; vàng cam tốt, tím đen nguy hiểm; không máu me. | Cách thể hiện nghệ thuật tự chọn. | Ảnh/video Đêm 1 trước và sau khi thắp đèn. |
+| ID | Yêu cầu PRD-0 | Điểm chưa rõ / giả định | Bằng chứng kiểm chứng | Kết quả |
+|---|---|---|---|:---:|
+| P1-01 | Game 3D tên Đảo Đèn Lồng; một màn Đêm 1 – Đảo Bến, đảo tròn có **5** Đèn Lồng Lớn. | Bán kính đảo 30 m, 5 đèn xếp vòng cung đối xứng. | [game-screen.png](../proof/game-screen.png), verify check 1 | **Đạt** |
+| P1-02 | Điều khiển Mây đi lại, nhảy, camera 3D. Mây đội nón lá có đèn lồng nhỏ. | Vận tốc 6 m/s, nhảy chỉ tác động Y, yaw camera xoay vector di chuyển. | Verify check 2 (di chuyển 60 Hz), bản chơi 3D | **Đạt** |
+| P1-03 | Đom đóm rải trên đảo và nhặt được. | Bán kính nhặt 1 m, tối đa mang 5 đom đóm, +10 điểm/con. | [pickup.jsonl](../proof/pickup.jsonl), verify check 3 | **Đạt** |
+| P1-04 | Mang ánh sáng đến nạp và thắp Đèn Lồng Lớn. | Cần 3 đom đóm/đèn, bán kính tương tác 2 m, +100 điểm/đèn. | [deposit.jsonl](../proof/deposit.jsonl), verify check 4 | **Đạt** |
+| P1-05 | Bóng Mực xuất hiện và đuổi Mây. | Tốc độ 2 m/s, đuổi theo hướng vector Mây trên mặt phẳng XZ. | [pulse.jsonl](../proof/pulse.jsonl), verify check 5 | **Đạt** |
+| P1-06 | Bóng Mực chạm Mây làm Mây mất máu. | Mây có 3 tim đèn, mỗi lần chạm mất 1 tim, miễn nhiễm 1 s. | [hit.jsonl](../proof/hit.jsonl), verify check 6 | **Đạt** |
+| P1-07 | Mây tỏa sáng để xua Bóng Mực và tốn ánh sáng. | Tốn 1 đom đóm đang mang, bán kính 5 m, đẩy xa 3 m, choáng 2 s, hồi 3 s. | [pulse.jsonl](../proof/pulse.jsonl), verify check 5 | **Đạt** |
+| P1-08 | Bóng Mực sợ những chiếc đèn. | Đèn đã thắp tạo vùng an toàn bán kính 4 m, Bóng Mực không vào được. | Verify check 18 (`safe_radius`) | **Đạt** |
+| P1-09 | Thắp hết đèn thì thắng; hết máu thì thua. | Thắng khi thắp đủ 5 đèn (`all_lit`), thua khi hết máu (`no_flames`) hoặc hết 300 s (`dawn`). | [win.jsonl](../proof/win.jsonl), [loss.jsonl](../proof/loss.jsonl), [dawn.jsonl](../proof/dawn.jsonl), checks 7, 8, 9, 21 | **Đạt** |
+| P1-10 | Có điểm số và HUD; chơi lại được sau thắng/thua. | Điểm lưu theo công thức `score.*`, HUD hiển thị đủ thông số, phím R restart. | [sequence.jsonl](../proof/sequence.jsonl), check 12, giao diện WebGL2 | **Đạt** |
+| P1-11 | Cảm giác đêm ấm áp, cổ tích; đảo sáng dần; vàng cam tốt, tím đen nguy hiểm; không máu me. | Phong cách nghệ thuật tối giản, an toàn, ánh sáng ấm. | [game-screen.png](../proof/game-screen.png), README mục Sáng tạo | **Đạt** |
 
 ## B. Test Contract v1.0 — giao diện bắt buộc
 
-| ID | Điều bắt buộc, chính xác | Cách chứng minh |
-|---|---|---|
-| C-01 | `game.contract.json` ở gốc repo; `contract_version: "1.0"`, `team`, `build_cmd`, `run_cmd`, `headless_cmd`, `tuning` đúng tên và kiểu. Lệnh chạy trên macOS/Linux sau build. | Parse JSON, kiểm tra trường; chạy các lệnh khai báo trong môi trường sạch. |
-| C-02 | Headless nhận `--seed <int> --night 1 [--scenario <file.json>] [--inputs <file.json>] --ticks <int> --out <file.jsonl> [--snapshot-every <int>]`. Mặc định snapshot mỗi **10** tick. | Chạy cả trường hợp tối thiểu và có đầy đủ tùy chọn. |
-| C-03 | Logic cố định **60 tick/giây**, không cửa sổ/GPU; dừng sau đúng N bước hoặc khi game kết thúc; thành công mã 0, lỗi khác 0, input/scenario sai định dạng mã **2** và báo stderr. | Kiểm tra exit code, stderr, số bước và thời gian. |
-| C-04 | Snapshot tick 0 sau dựng scenario, trước input. Bước k đọc input tick k tạo trạng thái k+1; event trong bước đó mang tick k+1; `--ticks N` là N bước. `time_left_s = duration − steps/60`. | Scenario 0, 1, 60 tick; kiểm tra snapshot/event tick và thời gian. |
-| C-05 | Đơn vị mét; Y lên; mặt đất Y=0; Mây mặc định (0,0,0). `player.pos` là chân, `shade.pos` là tâm, `lantern.pos` là chân cột, mote là điểm trên đất. Mọi bán kính đo trên XZ, tính cả biên `≤ r`. | Scenario đặt đối tượng đúng biên và ngay ngoài biên; kiểm tra nhặt, tương tác, va chạm. |
-| C-06 | `inputs.frames` có tick tăng **nghiêm ngặt**; trước frame đầu: move `[0,0]`, yaw 0, nút false. Trường vắng mặt giữ giá trị cũ. | Test frame thưa, frame trùng/giảm, trường vắng mặt. |
-| C-07 | `move: [x,z]` mỗi phần tử trong [-1,1], chuẩn hóa nếu dài >1. Yaw θ: `x'=x cosθ+z sinθ`, `z'=-x sinθ+z cosθ`. `jump`, `interact`, `pulse` (và `dash` nếu có) kích hoạt ở cạnh false→true. Không file inputs = đứng yên. | Scenario yaw 0/90, move [1,1], giữ nút qua nhiều tick rồi nhả/nhấn lại. |
-| C-08 | Scenario: trường vắng mặt dùng mặc định; `random_motes:false`/`random_shades:false` tắt tự sinh; `motes`/`shades` thay danh sách, kể cả mảng rỗng; `lanterns` cập nhật L1…L5 theo id, đèn không nhắc giữ nguyên; `lit:true` được phép; dựng scenario không phát event/cộng điểm. | Test scenario rỗng, thay danh sách, chỉnh 1 đèn, đặt sẵn đèn sáng; xem snapshot tick 0 và score. |
-| C-09 | Output **JSONL**: snapshot tick 0 và mỗi `snapshot-every`; event ngay khi xảy ra; end là dòng cuối **bắt buộc**. Snapshot có `type,tick,sim_tick,state,time_left_s,score,player,lanterns,shades,motes_active`; player có `pos,flames,carried`; lantern có `id,pos,lit,deposited`; shade có `id,pos,state`. | Parse từng dòng; kiểm tra schema, thứ tự dòng, tick 0, end cuối. |
-| C-10 | Event names/data chính xác: `mote_picked{carried}`, `deposit{lantern_id,amount,deposited}`, `lantern_lit{lantern_id}`, `pulse{stunned_ids}`, `player_hit{by,flames,dropped}`, `shade_spawned{id}`, `game_over{result,reason}`. Lý do kết thúc: `all_lit`, `dawn`, `no_flames`. | Scenario riêng cho từng event có thể phát sinh; kiểm tra tên, trường, kiểu và tick. Không phát event cho cơ chế không có trong game. |
-| C-11 | `state` là `playing/won/lost`; Bóng Mực tối thiểu có trạng thái `stunned`. Tọa độ làm tròn **3 chữ số thập phân**. `sim_tick=tick` ở Phase 1. | Kiểm tra giá trị enum, số thập phân, sim_tick. |
-| C-12 | Cùng seed + scenario + inputs cho output **giống hệt từng byte**, gồm ID tự sinh. Không cần RNG trùng bài khác. | Chạy 2 lần cùng đầu vào và so sánh hash/file. |
+| ID | Điều bắt buộc, chính xác | Bằng chứng kiểm chứng | Kết quả |
+|---|---|---|:---:|
+| C-01 | `game.contract.json` ở gốc repo; `contract_version: "1.0"`, `team`, `build_cmd`, `run_cmd`, `headless_cmd`, `tuning` đúng tên và kiểu. Lệnh chạy trên macOS/Linux sau build. | `node scripts/build.mjs` kiểm tra cú pháp và so khớp toàn bộ tuning | **Đạt** |
+| C-02 | Headless nhận `--seed <int> --night 1 [--scenario <file.json>] [--inputs <file.json>] --ticks <int> --out <file.jsonl> [--snapshot-every <int>]`. Mặc định snapshot mỗi **10** tick. | Verify check 14 (`snapshot-every defaults to ten`), kịch bản chạy tối thiểu và đầy đủ | **Đạt** |
+| C-03 | Logic cố định **60 tick/giây**, không cửa sổ/GPU; dừng sau đúng N bước hoặc khi game kết thúc; thành công mã 0, lỗi khác 0, input/scenario sai định dạng mã **2** và báo stderr. | Verify check 15, 16; [contract-check.txt](../proof/contract-check.txt) ghi nhận exit code 2 và stderr | **Đạt** |
+| C-04 | Snapshot tick 0 sau dựng scenario, trước input. Bước k đọc input tick k tạo trạng thái k+1; event trong bước đó mang tick k+1; `--ticks N` là N bước. `time_left_s = duration − steps/60`. | Verify checks 1, 2, 12; validator schema kiểm tra thứ tự tick | **Đạt** |
+| C-05 | Đơn vị mét; Y lên; mặt đất Y=0; Mây mặc định (0,0,0). `player.pos` là chân, `shade.pos` là tâm, `lantern.pos` là chân cột, mote là điểm trên đất. Mọi bán kính đo trên XZ, tính cả biên `≤ r`. | [boundary.jsonl](../proof/boundary.jsonl), verify checks 13, 17 | **Đạt** |
+| C-06 | `inputs.frames` có tick tăng **nghiêm ngặt**; trước frame đầu: move `[0,0]`, yaw 0, nút false. Trường vắng mặt giữ giá trị cũ. | Verify check 12 (`sequence`), check 15 (`invalid frame ticks exit 2`) | **Đạt** |
+| C-07 | `move: [x,z]` mỗi phần tử trong [-1,1], chuẩn hóa nếu dài >1. Yaw θ: `x'=x cosθ+z sinθ`, `z'=-x sinθ+z cosθ`. `jump`, `interact`, `pulse` (và `dash` nếu có) kích hoạt ở cạnh false→true. Không file inputs = đứng yên. | Verify checks 2, 19 (`held pulse fires only on false-to-true`) | **Đạt** |
+| C-08 | Scenario: trường vắng mặt dùng mặc định; `random_motes:false`/`random_shades:false` tắt tự sinh; `motes`/`shades` thay danh sách, kể cả mảng rỗng; `lanterns` cập nhật L1…L5 theo id, đèn không nhắc giữ nguyên; `lit:true` được phép; dựng scenario không phát event/cộng điểm. | Verify checks 1, 20 (`scenario partial lantern patch preserves unmentioned lanterns and lit gives zero score`) | **Đạt** |
+| C-09 | Output **JSONL**: snapshot tick 0 và mỗi `snapshot-every`; event ngay khi xảy ra; end là dòng cuối **bắt buộc**. Snapshot có `type,tick,sim_tick,state,time_left_s,score,player,lanterns,shades,motes_active`; player có `pos,flames,carried`; lantern có `id,pos,lit,deposited`; shade có `id,pos,state`. | Hàm `validateOutput()` trong verify kiểm tra toàn diện mọi trường | **Đạt** |
+| C-10 | Event names/data chính xác: `mote_picked{carried}`, `deposit{lantern_id,amount,deposited}`, `lantern_lit{lantern_id}`, `pulse{stunned_ids}`, `player_hit{by,flames,dropped}`, `shade_spawned{id}`, `game_over{result,reason}`. Lý do kết thúc: `all_lit`, `dawn`, `no_flames`. | Toàn bộ 9 fixture scenario và `validateOutput()` kiểm tra schema event | **Đạt** |
+| C-11 | `state` là `playing/won/lost`; Bóng Mực tối thiểu có trạng thái `stunned`. Tọa độ làm tròn **3 chữ số thập phân**. `sim_tick=tick` ở Phase 1. | Verify checks và hàm kiểm tra `coordinate exceeds 3 decimals` | **Đạt** |
+| C-12 | Cùng seed + scenario + inputs cho output **giống hệt từng byte**, gồm ID tự sinh. Không cần RNG trùng bài khác. | Verify check 10, 11; [contract-check.txt](../proof/contract-check.txt) có mã băm SHA-256 | **Đạt** |
 
 ### Tên trường `tuning` phải khai báo
 
