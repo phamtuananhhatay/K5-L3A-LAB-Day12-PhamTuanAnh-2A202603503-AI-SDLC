@@ -55,4 +55,4 @@ Bản đồ đảo có các đèn xếp thành vòng, vùng sáng ấm xuất hi
 
 ## Tài liệu lab
 
-[Hướng dẫn gốc](docs/requirements/LAB-README.md) · [GUIDE](GUIDE.md) · [RULES](RULES.md) · [RUBRIC](RUBRIC.md) · [SUBMISSION](SUBMISSION.md)
+[Báo cáo Phase 1](PHASE-1-REPORT.md) · [Hướng dẫn gốc](docs/requirements/LAB-README.md) · [GUIDE](GUIDE.md) · [RULES](RULES.md) · [RUBRIC](RUBRIC.md) · [SUBMISSION](SUBMISSION.md)
