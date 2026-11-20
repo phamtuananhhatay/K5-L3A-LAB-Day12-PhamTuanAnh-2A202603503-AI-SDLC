@@ -5,6 +5,11 @@ import { mkdtemp, readFile, writeFile, unlink, rmdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+const activeContract=JSON.parse(await readFile('game.contract.json','utf8'));
+if(activeContract.contract_version!=='1.0'){
+  throw new Error('Historical Phase1 evidence requires contract1.0 at tag phase-1. For current1.1 run: node tests/phase2/verify.mjs --evidence');
+}
+
 const cases = [
   ['pickup', 'pickup', null, 1],
   ['deposit', 'deposit', 'deposit', 1],
@@ -15,6 +20,7 @@ const cases = [
   ['dawn', 'dawn', null, 1],
   ['sequence', 'sequence', 'sequence', 16],
   ['boundary', 'boundary', null, 1],
+  ['chase', 'chase', null, 60],
 ];
 function run(args) {
   return spawnSync(process.execPath, ['src/headless.mjs', '--seed', '42', '--night', '1', ...args], { encoding: 'utf8' });

@@ -1,0 +1,4 @@
+{
+  "exit_code": 2,
+  "stderr": "frame.move must be [x,z] with each component in [-1,1]\n"
+}

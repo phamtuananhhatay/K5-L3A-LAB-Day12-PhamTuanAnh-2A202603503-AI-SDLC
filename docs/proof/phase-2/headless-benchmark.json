@@ -1,0 +1,9 @@
+{
+  "node": "v24.12.0",
+  "platform": "win32",
+  "cpu": "AMD Ryzen 5 5500U with Radeon Graphics         ",
+  "ticks": 21600,
+  "seconds": 6.0598238,
+  "limit_seconds": 30,
+  "scenario": "night3 default spawning enabled, player invulnerability 21601 ticks prevents early death; wind disabled to prevent falling; full 360 seconds including CLI and JSONL writing"
+}

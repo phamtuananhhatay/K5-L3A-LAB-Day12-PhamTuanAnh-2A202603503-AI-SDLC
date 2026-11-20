@@ -1,0 +1,20 @@
+{
+  "player": {
+    "carried": 8
+  },
+  "drifters": [
+    {
+      "id": "D1",
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "state": "chase"
+    }
+  ],
+  "charms": [],
+  "random_motes": false,
+  "random_shades": false,
+  "random_drifters": false
+}

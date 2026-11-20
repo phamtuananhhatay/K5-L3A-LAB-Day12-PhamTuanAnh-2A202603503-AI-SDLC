@@ -10,9 +10,10 @@ Mã kiểm chứng: `src/core.mjs`, `src/headless.mjs`, `src/game.mjs`, `tests/p
 | Nạp đom đóm và thắp sáng Đèn Lồng | `deposit.scenario.json` + `deposit.inputs.json`, 1 tick | [deposit.jsonl](deposit.jsonl): `deposit`, `lantern_lit`, score 100 | **Đạt** |
 | Mây tỏa sáng (pulse), choáng và đẩy quái | `pulse.scenario.json` + `pulse.inputs.json`, 1 tick | [pulse.jsonl](pulse.jsonl): `pulse`, S1 stunned, dời vị trí | **Đạt** |
 | Bóng Mực chạm Mây làm mất máu | `hit.scenario.json`, 1 tick | [hit.jsonl](hit.jsonl): `player_hit`, flames 2 | **Đạt** |
+| Bóng Mực đuổi Mây | `chase.scenario.json`, 60 tick | [chase.jsonl](chase.jsonl): S1 đi từ X=10 đến X=8, đúng tốc độ 2 m/s | **Đạt** |
 | Thắp đủ 5 đèn thì thắng cuộc | `win.scenario.json` + `deposit.inputs.json`, 1 tick | [win.jsonl](win.jsonl): `game_over/all_lit`, end won | **Đạt** |
 | Hết máu hoặc hết thời gian thì thua | `loss.scenario.json` / `dawn.scenario.json`, 1 tick | [loss.jsonl](loss.jsonl), [dawn.jsonl](dawn.jsonl): end lost | **Đạt** |
-| Ranh giới bán kính, vùng an toàn, pulse cạnh nút, tính tất định và lỗi input | `node tests/phase1/verify.mjs` | `Phase 1 headless checks: 21 passed` | **Đạt** |
+| Ranh giới bán kính, vùng an toàn, pulse cạnh nút, tính tất định và lỗi input | `node tests/phase1/verify.mjs` | `Phase 1 headless checks: 23 passed` trên working tree hiện tại | **Đạt** |
 | Chuỗi nhặt → nạp → pulse → đi bộ | `sequence.scenario.json` + `sequence.inputs.json`, 16 tick | [sequence.jsonl](sequence.jsonl): event tick 1/2/4; carried 4→1→0; điểm 20→120→125; X=1 ở tick 15 | **Đạt** |
 | Bán kính nhặt đúng biên, chỉ đo XZ | `boundary.scenario.json`, 1 tick | [boundary.jsonl](boundary.jsonl): chỉ nhặt mote X=1 dù Y=4; mote X=1.001 còn lại | **Đạt** |
 | Input và scenario sai định dạng | `invalid.inputs.json`, `invalid.scenario.json` | [contract-check.txt](contract-check.txt): exit code 2, stderr có lý do | **Đạt** |

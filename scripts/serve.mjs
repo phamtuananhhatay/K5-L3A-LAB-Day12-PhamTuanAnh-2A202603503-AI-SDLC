@@ -5,13 +5,16 @@ import { fileURLToPath } from 'node:url';
 const routes = new Map([
   ['/', ['../index.html', 'text/html; charset=utf-8']],
   ['/src/core.mjs', ['../src/core.mjs', 'text/javascript; charset=utf-8']],
+  ['/src/maps.mjs', ['../src/maps.mjs', 'text/javascript; charset=utf-8']],
+  ['/src/audio.mjs', ['../src/audio.mjs', 'text/javascript; charset=utf-8']],
+  ['/src/colors.mjs', ['../src/colors.mjs', 'text/javascript; charset=utf-8']],
   ['/src/game.mjs', ['../src/game.mjs', 'text/javascript; charset=utf-8']],
   ['/smoke', ['../smoke/hello-3d.html', 'text/html; charset=utf-8']],
 ]);
 const port = Number(process.env.PORT || 4173);
 
 createServer(async (request, response) => {
-  const route = routes.get(request.url);
+  const route = routes.get(new URL(request.url, 'http://localhost').pathname);
   if (!route) {
     response.writeHead(404).end('Not found');
     return;

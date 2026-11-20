@@ -1,0 +1,22 @@
+{
+  "player": {
+    "carried": 3
+  },
+  "drifters": [
+    {
+      "id": "D1",
+      "pos": [
+        2,
+        0,
+        0
+      ],
+      "state": "flee",
+      "stolen": 3,
+      "state_ticks_left": 200
+    }
+  ],
+  "charms": [],
+  "random_motes": false,
+  "random_shades": false,
+  "random_drifters": false
+}

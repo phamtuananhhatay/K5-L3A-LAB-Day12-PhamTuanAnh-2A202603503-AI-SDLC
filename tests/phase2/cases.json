@@ -1,0 +1,16 @@
+[
+  {"name":"dash","night":1,"ticks":12,"scenario":{"player":{"pos":[0,0,0]},"random_motes":false,"random_shades":false},"inputs":{"frames":[{"tick":0,"dash":true}]},"expect":{"event":"dash","pos":[0,0,2.8],"sim_tick":12}},
+  {"name":"pause","night":1,"ticks":60,"scenario":{"random_motes":false,"random_shades":false},"inputs":{"frames":[{"tick":0,"pause":true}]},"expect":{"state":"paused","sim_tick":0,"time_left_s":300,"event":"paused"}},
+  {"name":"resume","night":1,"ticks":4,"scenario":{"random_motes":false,"random_shades":false},"inputs":{"frames":[{"tick":0,"pause":true},{"tick":1,"pause":false},{"tick":2,"pause":true}]},"expect":{"state":"playing","sim_tick":2,"event":"resumed"}},
+  {"name":"charm","night":2,"ticks":1,"scenario":{"player":{"pos":[35,0,0]},"random_motes":false,"random_shades":false,"random_drifters":false},"inputs":{"frames":[]},"expect":{"charm_s":10,"event":"charm_picked"}},
+  {"name":"steal","night":2,"ticks":1,"scenario":{"player":{"carried":8},"drifters":[{"id":"D1","pos":[0,0,0],"state":"chase"}],"charms":[],"random_motes":false,"random_shades":false,"random_drifters":false},"inputs":{"frames":[]},"expect":{"carried":5,"event":"drifter_steal","stolen":3}},
+  {"name":"drifter-drop","night":2,"ticks":1,"scenario":{"player":{"carried":3},"drifters":[{"id":"D1","pos":[2,0,0],"state":"flee","stolen":3,"state_ticks_left":200}],"charms":[],"random_motes":false,"random_shades":false,"random_drifters":false},"inputs":{"frames":[{"tick":0,"pulse":true}]},"expect":{"carried":0,"event":"drifter_drop","motes_active":3}},
+  {"name":"fall","night":1,"ticks":1,"scenario":{"player":{"pos":[41,-11,0],"carried":8,"invuln_ticks":90},"random_motes":false,"random_shades":false},"inputs":{"frames":[]},"expect":{"flames":2,"carried":0,"event":"player_hit"}},
+  {"name":"hit-drop","night":1,"ticks":1,"scenario":{"player":{"carried":9},"shades":[{"id":"S1","pos":[0,0,0]}],"random_motes":false,"random_shades":false},"inputs":{"frames":[]},"expect":{"flames":2,"carried":5,"motes_active":4,"event":"player_hit"}},
+  {"name":"pulse","night":1,"ticks":15,"scenario":{"player":{"carried":3},"shades":[{"id":"S1","pos":[2,0.8,0]}],"random_motes":false,"random_shades":false},"inputs":{"frames":[{"tick":0,"pulse":true}]},"expect":{"carried":0,"shade_x":6,"score":5,"event":"pulse"}},
+  {"name":"deposit","night":1,"ticks":1,"scenario":{"player":{"carried":10},"lanterns":[{"id":"L1","pos":[0,0,1]}],"random_motes":false,"random_shades":false},"inputs":{"frames":[{"tick":0,"interact":true}]},"expect":{"carried":0,"score":200,"event":"lantern_lit"}},
+  {"name":"shade-spawn","night":1,"ticks":300,"scenario":{"random_motes":false,"random_shades":true},"inputs":{"frames":[]},"expect":{"shades":2,"event":"shade_spawned"}},
+  {"name":"drifter-spawn","night":2,"ticks":1200,"scenario":{"random_motes":false,"random_shades":false},"inputs":{"frames":[]},"expect":{"drifters":1}},
+  {"name":"wind","night":3,"ticks":1800,"scenario":{"random_motes":false,"random_shades":false,"random_drifters":false},"inputs":{"frames":[]},"expect":{"wind_active":true}},
+  {"name":"pad","night":2,"ticks":1,"scenario":{"player":{"pos":[20,0,18]},"random_motes":false,"random_shades":false,"random_drifters":false},"inputs":{"frames":[]},"expect":{"airborne":true}}
+]

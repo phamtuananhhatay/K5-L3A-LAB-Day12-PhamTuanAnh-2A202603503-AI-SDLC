@@ -25,8 +25,8 @@ function parseArgs(argv) {
     if (!Number.isInteger(value)) throw new Error(`${name} must be an integer`);
     options[name] = value;
   }
-  if (options.night !== 1 || !nonnegativeInteger(options.ticks) || options.snapshotEvery <= 0 || !options.out) {
-    throw new Error('Expected --night 1, --ticks >= 0, --snapshot-every > 0 and --out');
+  if (![1,2,3].includes(options.night) || !nonnegativeInteger(options.ticks) || options.snapshotEvery <= 0 || !options.out) {
+    throw new Error('Expected --night 1/2/3, --ticks >= 0, --snapshot-every > 0 and --out');
   }
   return options;
 }
@@ -41,21 +41,21 @@ function validateScenario(value) {
   if (value.player !== undefined) {
     if (!isObject(value.player)) throw new InputFileError('scenario.player must be an object');
     if (value.player.pos !== undefined && !vector(value.player.pos)) throw new InputFileError('scenario.player.pos must be [x,y,z]');
-    for (const name of ['carried', 'flames']) {
+    for (const name of ['carried', 'flames', 'invuln_ticks', 'dash_cd_ticks', 'pulse_cd_ticks', 'charm_ticks']) {
       if (value.player[name] !== undefined && !nonnegativeInteger(value.player[name])) throw new InputFileError(`scenario.player.${name} must be a nonnegative integer`);
     }
   }
-  for (const name of ['random_motes', 'random_shades']) {
+  for (const name of ['random_motes', 'random_shades', 'random_drifters', 'wind_enabled']) {
     if (value[name] !== undefined && typeof value[name] !== 'boolean') throw new InputFileError(`scenario.${name} must be boolean`);
   }
   if (value.motes !== undefined && (!Array.isArray(value.motes) || !value.motes.every(item => vector(item)))) {
     throw new InputFileError('scenario.motes must be an array of [x,y,z]');
   }
-  if (value.shades !== undefined && (!Array.isArray(value.shades) || !value.shades.every(item => isObject(item) && vector(item.pos) && (item.id === undefined || typeof item.id === 'string')))) {
+  if (value.shades !== undefined && (!Array.isArray(value.shades) || !value.shades.every(item => isObject(item) && vector(item.pos) && (item.id === undefined || typeof item.id === 'string') && (item.state === undefined || ['spawning','wander','chase','recoil','stunned'].includes(item.state)) && (item.state_ticks_left === undefined || nonnegativeInteger(item.state_ticks_left))))) {
     throw new InputFileError('scenario.shades must be an array of objects with pos');
   }
   if (value.lanterns !== undefined && (!Array.isArray(value.lanterns) || !value.lanterns.every(item =>
-    isObject(item) && /^L[1-5]$/.test(item.id) &&
+    isObject(item) && /^L[1-7]$/.test(item.id) &&
     (item.pos === undefined || vector(item.pos)) &&
     (item.lit === undefined || typeof item.lit === 'boolean') &&
     (item.deposited === undefined || nonnegativeInteger(item.deposited))))) {
@@ -64,6 +64,8 @@ function validateScenario(value) {
   if (value.time_left_s !== undefined && (!finite(value.time_left_s) || value.time_left_s < 0)) {
     throw new InputFileError('scenario.time_left_s must be nonnegative');
   }
+  if(value.drifters!==undefined&&(!Array.isArray(value.drifters)||!value.drifters.every(d=>isObject(d)&&vector(d.pos)&&(d.id===undefined||typeof d.id==='string')&&(d.state===undefined||['idle','chase','flee','removed'].includes(d.state))&&(d.stolen===undefined||nonnegativeInteger(d.stolen))&&(d.state_ticks_left===undefined||nonnegativeInteger(d.state_ticks_left)))))throw new InputFileError('Invalid scenario.drifters');
+  if(value.charms!==undefined&&(!Array.isArray(value.charms)||!value.charms.every(c=>isObject(c)&&typeof c.id==='string'&&(c.pos===undefined||vector(c.pos))&&(c.available===undefined||typeof c.available==='boolean')&&(c.respawn_s===undefined||(finite(c.respawn_s)&&c.respawn_s>=0)))))throw new InputFileError('Invalid scenario.charms');
 }
 
 function validateInputs(value) {
@@ -78,7 +80,7 @@ function validateInputs(value) {
       throw new InputFileError('frame.move must be [x,z] with each component in [-1,1]');
     }
     if (frame.cam_yaw_deg !== undefined && !finite(frame.cam_yaw_deg)) throw new InputFileError('frame.cam_yaw_deg must be finite');
-    for (const name of ['jump', 'interact', 'pulse', 'dash']) {
+    for (const name of ['jump', 'interact', 'pulse', 'dash', 'pause']) {
       if (frame[name] !== undefined && typeof frame[name] !== 'boolean') throw new InputFileError(`frame.${name} must be boolean`);
     }
   }
@@ -90,12 +92,12 @@ async function main() {
   const inputs = args.inputs ? await loadJson(args.inputs, 'inputs') : { frames: [] };
   validateScenario(scenario);
   validateInputs(inputs);
-  const game = createGame(args.seed, scenario);
-  const lines = [JSON.stringify(snapshot(game))];
+  const game = createGame(args.seed, scenario, args.night);
+  const lines = [JSON.stringify({type:'event',tick:0,name:'night_start',data:{night:args.night}}), JSON.stringify(snapshot(game))];
   let input = { ...INITIAL_INPUT, move: [...INITIAL_INPUT.move] };
   let previousInput = { ...input };
   let frameIndex = 0;
-  for (let tick = 0; tick < args.ticks && game.state === 'playing'; tick++) {
+  for (let tick = 0; tick < args.ticks && !['won','lost'].includes(game.state); tick++) {
     if (frameIndex < inputs.frames.length && inputs.frames[frameIndex].tick === tick) {
       input = { ...input, ...inputs.frames[frameIndex] };
       frameIndex++;

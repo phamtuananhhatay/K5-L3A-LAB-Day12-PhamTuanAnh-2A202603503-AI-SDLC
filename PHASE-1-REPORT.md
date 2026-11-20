@@ -2,8 +2,10 @@
 **Khóa học:** Day 12 · AI SDLC Lab  
 **Học viên:** Phạm Tuấn Anh — **MSSV:** 2A202603503  
 **Repository:** [K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC](https://github.com/phamtuananhhatay/K5-L3-LAB-Day12-PhamTuanAnh-2A202603503-AI-SDLC)  
-**Mốc phát hành:** Git tag `phase-1` (Commit hash: `d67561c`)  
+**Mốc phát hành:** Git tag `phase-1` (Commit hash: `438f13e`)
 **Test Contract:** v1.0  
+
+> Đính chính sau phát hành: [rà soát Test Contract](docs/proof/phase-1-audit.md) phát hiện lỗi biên vùng an toàn và chỗ bằng chứng chưa khớp. Các sửa đổi trong báo cáo rà soát nằm sau tag `phase-1`; kết quả tại tag vẫn là 21 bài kiểm tra tự viết đạt.
 
 ---
 
@@ -37,7 +39,7 @@ Triển khai màn chơi đầu tiên **Đêm 1 – Đảo Bến** theo [PRD-0](d
       • Xuất JSONL: snapshot, event, end        • HUD, Canvas, vòng lặp requestAnimationFrame
 ```
 
-- **Single Source of Truth**: Mọi quy tắc tính điểm, va chạm, nhặt đom đóm, trừ máu, bán kính an toàn và điều kiện thắng/thua đều nằm trong hàm thuần túy `step()` tại [src/core.mjs](src/core.mjs).
+- **Single Source of Truth**: Mọi quy tắc tính điểm, va chạm, nhặt đom đóm, trừ máu, bán kính an toàn và điều kiện thắng/thua đều nằm trong `step()` tại [src/core.mjs](src/core.mjs). Hàm này cập nhật trạng thái `game` tại chỗ.
 - **Renderer độc lập**: Renderer chỉ đọc dữ liệu trạng thái để vẽ, không can thiệp hay thay đổi luật chơi.
 
 ---
@@ -52,10 +54,10 @@ Triển khai màn chơi đầu tiên **Đêm 1 – Đảo Bến** theo [PRD-0](d
 | **P1-02** | Điều khiển Mây đi lại, nhảy, camera 3D, nón lá có đèn nhỏ | Vận tốc 6 m/s, nhảy trục Y, yaw camera tính theo $X/Z$ | Verify check 2 (`camera-relative movement at 60 Hz`) | **ĐẠT** |
 | **P1-03** | Đom đóm rải rác trên đảo, nhặt được | Bán kính $\le 1\text{ m}$, mang tối đa 5 con, +10 điểm/con | [pickup.jsonl](docs/proof/pickup.jsonl), verify check 3 | **ĐẠT** |
 | **P1-04** | Nạp ánh sáng và thắp Đèn Lồng Lớn | Cần 3 đom đóm/đèn, bán kính nạp $\le 2\text{ m}$, +100 điểm/đèn | [deposit.jsonl](docs/proof/deposit.jsonl), verify check 4 | **ĐẠT** |
-| **P1-05** | Bóng Mực xuất hiện và đuổi Mây | Vận tốc 2 m/s, đuổi theo vector XZ hướng về Mây | [pulse.jsonl](docs/proof/pulse.jsonl), verify check 5 | **ĐẠT** |
+| **P1-05** | Bóng Mực xuất hiện và đuổi Mây | Vận tốc 2 m/s, đuổi theo vector XZ hướng về Mây | [chase.jsonl](docs/proof/chase.jsonl) và test đuổi riêng (bổ sung sau tag) | **ĐẠT sau tag** |
 | **P1-06** | Bóng Mực chạm Mây làm Mây mất máu | Có 3 tim đèn (`flames`), chạm mất 1 tim, miễn nhiễm 1 s | [hit.jsonl](docs/proof/hit.jsonl), verify check 6 | **ĐẠT** |
 | **P1-07** | Mây tỏa sáng (Pulse) để xua Bóng Mực | Tiêu tốn 1 đom đóm mang theo, bán kính 5 m, đẩy xa 3 m, choáng 2 s | [pulse.jsonl](docs/proof/pulse.jsonl), verify check 5 | **ĐẠT** |
-| **P1-08** | Bóng Mực sợ những chiếc đèn | Bán kính an toàn 4 m quanh **đèn đã thắp**, quái bị chặn ngoài | Verify check 18 (`safe_radius`) | **ĐẠT** |
+| **P1-08** | Bóng Mực sợ những chiếc đèn | Bán kính an toàn 4 m quanh **đèn đã thắp**, quái bị chặn ngoài | Test tại tag chưa bắt lỗi biên; [rà soát sau tag](docs/proof/phase-1-audit.md) | **LỖI BIÊN TẠI TAG; ĐÃ SỬA SAU TAG** |
 | **P1-09** | Thắp hết đèn thì thắng; hết máu/giờ thì thua | Thắp đủ 5 đèn $\rightarrow$ `won/all_lit`; hết tim $\rightarrow$ `lost/no_flames`; hết 300 s $\rightarrow$ `lost/dawn` | [win.jsonl](docs/proof/win.jsonl), [loss.jsonl](docs/proof/loss.jsonl), [dawn.jsonl](docs/proof/dawn.jsonl), checks 7, 8, 9, 21 | **ĐẠT** |
 | **P1-10** | Điểm số, HUD trực quan, phím chơi lại (R) | Tính điểm chuẩn `score.*`, hiển thị máu/đèn/điểm/giờ, phím R restart | [sequence.jsonl](docs/proof/sequence.jsonl), verify check 12, WebGL2 | **ĐẠT** |
 | **P1-11** | Cảm giác đêm ấm áp, cổ tích; vàng cam tốt, tím đen nguy hiểm | Phong cách tối giản, tone màu ấm, không bạo lực | [game-screen.png](docs/proof/game-screen.png), README mục Sáng tạo | **ĐẠT** |
@@ -68,7 +70,7 @@ Triển khai màn chơi đầu tiên **Đêm 1 – Đảo Bến** theo [PRD-0](d
 | **C-02** | CLI nhận đủ flag; snapshot mặc định mỗi 10 tick | Chạy cả ca tối thiểu và ca có `--snapshot-every`, check 14 | **ĐẠT** |
 | **C-03** | Chạy 60 tick/s, dừng sau N bước hoặc kết thúc; lỗi format thoát mã **2** | [contract-check.txt](docs/proof/contract-check.txt), verify checks 15, 16 | **ĐẠT** |
 | **C-04** | Snapshot tick 0 sau scenario; bước $k$ tạo tick $k+1$; `time_left_s = duration - steps/60` | Hàm `validateOutput()` kiểm tra tick & thời gian | **ĐẠT** |
-| **C-05** | Tọa độ mét, Y lên, đất $Y=0$, khoảng cách đo XZ tính cả biên $\le r$ | [boundary.jsonl](docs/proof/boundary.jsonl), verify checks 13, 17 | **ĐẠT** |
+| **C-05** | Tọa độ mét, Y lên, đất $Y=0$, khoảng cách đo XZ tính cả biên $\le r$ | [boundary.jsonl](docs/proof/boundary.jsonl) kiểm tra nhặt; vùng an toàn có lỗi biên tại tag, đã bổ sung test/sửa sau tag | **CHƯA ĐẠT ĐẦY ĐỦ TẠI TAG** |
 | **C-06** | `inputs.frames` tick tăng nghiêm ngặt; giữ giá trị trường cũ nếu vắng mặt | Verify checks 12, 15 | **ĐẠT** |
 | **C-07** | Move $[-1, 1]$ chuẩn hóa độ dài $\le 1$, xoay yaw $\theta$, kích hoạt cạnh false $\rightarrow$ true | Verify checks 2, 19 (`held pulse fires only on transition`) | **ĐẠT** |
 | **C-08** | Scenario thay thế motes/shades; patch đèn theo ID; `lit:true` không cộng điểm | Verify check 20 (`scenario partial lantern patch...`) | **ĐẠT** |

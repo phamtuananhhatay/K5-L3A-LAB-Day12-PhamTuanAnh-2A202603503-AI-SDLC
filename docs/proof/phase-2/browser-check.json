@@ -1,0 +1,15 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "renderer": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x0000164C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "menu": true,
+  "start": true,
+  "screen_right": true,
+  "pause_resume": true,
+  "frames": 721,
+  "seconds": 5.000200000023842,
+  "average_fps": 144.1942322300232,
+  "meets_30_fps": true
+}
