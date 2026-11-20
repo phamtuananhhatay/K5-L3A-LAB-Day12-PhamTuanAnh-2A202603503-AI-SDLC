@@ -14,6 +14,7 @@
 | Kiểm tra | Lệnh | Kết quả |
 |---|---|---|
 | Build/cú pháp/thông số khai báo | `node scripts/build.mjs` | Đạt |
+| Clone sạch | Clone cục bộ commit `24b8873` bằng `git clone --no-hardlinks`, chạy build và toàn bộ entry point hồi quy trong thư mục tạm | Đạt, mã thoát0; không dùng node_modules hoặc cấu hình riêng của workspace |
 | Tọa độ bản đồ, cầu, mép, tầng, dốc | `node tests/phase2/maps.mjs` | Đạt |
 | 14 scenario mới, byte determinism, 5 ca file lỗi | `node tests/phase2/verify.mjs --evidence` | Đạt; mỗi ca lưu scenario, inputs, JSONL thật trong [thư mục bằng chứng](docs/proof/phase-2/) |
 | Hồi quy với số chuẩn | `node tests/phase2/regression.mjs` | Đạt: yaw, capacity, nạp từng phần/đèn sáng lâu dài, hồi sinh, hai bục nhảy, dash trên không, biên nhặt, giữ nút, bùa |
