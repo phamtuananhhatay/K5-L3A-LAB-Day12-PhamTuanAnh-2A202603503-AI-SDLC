@@ -12,7 +12,7 @@ Mã kiểm chứng: `src/core.mjs`, `src/headless.mjs`, `src/game.mjs`, `tests/p
 | Bóng Mực chạm Mây | `hit.scenario.json`, 1 tick | [hit.jsonl](hit.jsonl): `player_hit`, flames 2 | Đạt |
 | Thắp đèn cuối để thắng | `win.scenario.json` + `deposit.inputs.json`, 1 tick | [win.jsonl](win.jsonl): `game_over/all_lit`, end won | Đạt |
 | Hết máu/hết thời gian | `loss.scenario.json` / `dawn.scenario.json`, 1 tick | [loss.jsonl](loss.jsonl), [dawn.jsonl](dawn.jsonl): end lost | Đạt |
-| Ranh giới bán kính, vùng an toàn, pulse cạnh nút, tính tất định và lỗi input | `node tests/phase1/verify.mjs` | `Phase 1 headless checks: 19 passed` | Đạt |
+| Ranh giới bán kính, vùng an toàn, pulse cạnh nút, tính tất định và lỗi input | `node tests/phase1/verify.mjs` | `Phase 1 headless checks: 21 passed` | Đạt |
 | Chuỗi nhặt → nạp → pulse → đi bộ | `sequence.scenario.json` + `sequence.inputs.json`, 16 tick | [sequence.jsonl](sequence.jsonl): event tick 1/2/4; carried 4→1→0; điểm 20→120→125; X=1 ở tick 15 | Đạt |
 | Bán kính nhặt đúng biên, chỉ đo XZ | `boundary.scenario.json`, 1 tick | [boundary.jsonl](boundary.jsonl): chỉ nhặt mote X=1 dù Y=4; mote X=1.001 còn lại | Đạt |
 | Input và scenario sai định dạng | `invalid.inputs.json`, `invalid.scenario.json` | [contract-check.txt](contract-check.txt): exit code 2, stderr có lý do | Đạt |

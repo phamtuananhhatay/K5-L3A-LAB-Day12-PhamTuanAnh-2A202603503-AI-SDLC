@@ -243,6 +243,36 @@ try {
     assert.equal(game.player.carried, 4);
   });
 
+  check('scenario partial lantern patch preserves unmentioned lanterns and lit gives zero score', () => {
+    const game = createGame(1, {
+      random_motes: false, random_shades: false,
+      lanterns: [{ id: 'L3', pos: [10, 0, 10], lit: true }],
+    });
+    assert.equal(game.lanterns.length, 5);
+    const l3 = game.lanterns.find(l => l.id === 'L3');
+    assert.deepEqual(l3.pos, [10, 0, 10]);
+    assert.equal(l3.lit, true);
+    assert.equal(game.lanterns.find(l => l.id === 'L1').lit, false);
+    assert.equal(game.score, 0, 'setting lit in scenario must not award score');
+  });
+
+  check('win condition takes priority over death when both happen on final step', () => {
+    const game = createGame(1, {
+      random_motes: false, random_shades: false,
+      player: { pos: [0, 0, 0], carried: 1, flames: 1 },
+      lanterns: [
+        { id: 'L1', lit: true }, { id: 'L2', lit: true }, { id: 'L3', lit: true }, { id: 'L4', lit: true },
+        { id: 'L5', pos: [0, 0, 1], lit: false, deposited: 2 },
+      ],
+      shades: [{ id: 'S1', pos: [0, 0, 0.5] }],
+      motes: [],
+    });
+    const input = { ...INITIAL_INPUT, interact: true };
+    const events = step(game, input, INITIAL_INPUT);
+    assert.equal(game.state, 'won');
+    assert.ok(events.some(e => e.name === 'game_over' && e.data.result === 'won' && e.data.reason === 'all_lit'));
+  });
+
   console.log(`Phase 1 headless checks: ${count} passed`);
 } finally {
   for (const file of created) await unlink(file);

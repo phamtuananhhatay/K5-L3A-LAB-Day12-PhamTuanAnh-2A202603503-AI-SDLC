@@ -67,4 +67,4 @@ Các giá trị phải phản ánh **code thực tế**. Cơ chế không tồn 
 
 ## E. Tình trạng kiểm chứng hiện tại
 
-Đã triển khai lõi, headless và bản chơi WebGL2. Xem [bằng chứng Phase 1](../proof/phase-1.md). Cần kiểm thử thủ công một lượt chơi hoàn chỉnh trên macOS/Linux trước khi gắn tag phát hành.
+Đã triển khai hoàn tất lõi game, headless và bản chơi WebGL2. Toàn bộ 12 tiêu chí Test Contract v1.0 (C-01 đến C-12) cùng các hành vi Đêm 1 (P1-01 đến P1-11) đã vượt qua 21 automated checks trong `tests/phase1/verify.mjs`. Bằng chứng output JSONL, ảnh chụp màn hình WebGL2 và kiểm tra tính tất định SHA-256 đã lưu đầy đủ tại [docs/proof/phase-1.md](../proof/phase-1.md). Sẵn sàng cho Bước 6 kiểm chứng bản chơi thực tế và Bước 7 phát hành tag `phase-1`.
