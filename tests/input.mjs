@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {KeyboardInput,physicalKey} from '../src/input.mjs';
+const keyboard=new KeyboardInput();
+keyboard.press('KeyW');keyboard.release('KeyW');
+assert.ok(keyboard.sample().has('KeyW'),'tap must survive until next tick');
+assert.ok(!keyboard.sample().has('KeyW'),'released tap must stop after one sampled tick');
+keyboard.press('KeyA');
+for(let i=0;i<120;i++)assert.ok(keyboard.sample().has('KeyA'),'held key must stay active without repeat events');
+keyboard.release('KeyA');assert.ok(!keyboard.sample().has('KeyA'));
+keyboard.press('KeyW');keyboard.press('KeyD');assert.equal(keyboard.sample().size,2);
+keyboard.clear();assert.equal(keyboard.sample().size,0);
+assert.equal(physicalKey({code:'KeyW',key:'ư',keyCode:229,isComposing:true}),'KeyW');
+assert.equal(physicalKey({code:'KeyA',key:'â',keyCode:229,isComposing:true}),'KeyA');
+assert.equal(physicalKey({code:'KeyS',key:'Process',keyCode:229,isComposing:true}),'KeyS');
+assert.equal(physicalKey({code:'Unidentified',key:'w',keyCode:87}),'KeyW');
+console.log('PASS keyboard taps, hold/release, diagonal, focus reset and IME physical-key mapping');

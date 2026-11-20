@@ -1,5 +1,12 @@
 # Changelog
 
+## Sửa điều khiển sau tag phase-3
+
+- Đệm lần nhấn nhanh giữa hai tick để không mất input; giữ trạng thái phím cho tới keyup, không phụ thuộc nhịp lặp của bàn phím.
+- Ưu tiên event.code vật lý, hỗ trợ keyCode/key khi cần, đưa focus về canvas sau menu và resume; xóa trạng thái khi cửa sổ mất focus.
+- Chuyển cập nhật DOM HUD ra ngoài vòng tick và giới hạn10Hz để giảm khựng. Logic/headless và thông số60Hz không đổi.
+- Thêm test nhấn nhanh/giữ/nhả và sự kiện đang composing; test browser là mô phỏng sự kiện, không phải chạy chính bộ UniKey của người làm lab. Tag phase-3 giữ nguyên lịch sử.
+
 ## Phase 3 — Contract1.2 — breaking changes
 
 - Thời lượng300/330/360 →240/270/300s. Snapshot lantern thêm fuel, ever_lit, relit_count; player thêm capacity. Scenario thêm fuel/ever_lit, successful_lights và target_lantern_id; trạng thái shade thêm drain.

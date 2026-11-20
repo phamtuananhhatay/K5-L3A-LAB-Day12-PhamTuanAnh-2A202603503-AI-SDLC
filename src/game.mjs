@@ -1,8 +1,12 @@
 import { createGame, INITIAL_INPUT, step, snapshot, TUNING, capacity, fuelValue, lightCost, receivingLanterns } from './core.mjs';
 import { settings, saveSettings, startAudio, sound } from './audio.mjs';
 import { HEX, color } from './colors.mjs';
+import { KeyboardInput, physicalKey, GAME_KEYS } from './input.mjs';
 
 const canvas = document.querySelector('#scene');
+canvas.tabIndex=0;
+canvas.style.outline='none';
+const focusGame=()=>canvas.focus({preventScroll:true});
 const errorBox = document.querySelector('#error');
 const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
 document.documentElement.style.color=HEX.text;
@@ -159,26 +163,31 @@ function showSettings(back){showPanel('Cài đặt',[['Quay lại',back]]);for(c
   const row=document.createElement('label');row.textContent='Bảng màu dễ phân biệt';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='colorblind-setting';checkbox.checked=settings.colorblind;checkbox.onchange=()=>{settings.colorblind=checkbox.checked;saveSettings();document.documentElement.dataset.colorblind=String(settings.colorblind);};row.append(checkbox);panel.append(row);
 }
 function pauseMenu(){showPanel('Tạm dừng',[['Tiếp tục',()=>togglePause()],['Chơi lại Đêm',restart],['Cài đặt',()=>showSettings(pauseMenu)],['Về menu',menu]]);}
-function togglePause(){if(screen!=='playing')return;const input={...INITIAL_INPUT,pause:true};step(game,input,INITIAL_INPUT);previousInput={...INITIAL_INPUT};if(game.state==='paused')pauseMenu();else panel.style.display='none';}
-const keys = new Set();
-const handled = new Set(['Space', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyE', 'KeyQ', 'KeyR', 'ShiftLeft','ShiftRight','Escape','KeyP']);
+function togglePause(){if(screen!=='playing')return;const input={...INITIAL_INPUT,pause:true};step(game,input,INITIAL_INPUT);previousInput={...INITIAL_INPUT};keyboard.clear();if(game.state==='paused')pauseMenu();else{panel.style.display='none';focusGame();}}
+const keyboard = new KeyboardInput();
 window.addEventListener('keydown', event => {
-  if (handled.has(event.code)) event.preventDefault();
-  keys.add(event.code);
-  if(['Escape','KeyP'].includes(event.code)&&!event.repeat)togglePause();
-  if (event.code === 'KeyR' && !event.repeat) restart();
-});
-window.addEventListener('keyup', event => keys.delete(event.code));
-window.addEventListener('blur', () => keys.clear());
+  const code=physicalKey(event);
+  if(!GAME_KEYS.has(code)||screen!=='playing')return;
+  if(event.target instanceof HTMLInputElement)return;
+  event.preventDefault();
+  if(['Escape','KeyP'].includes(code)){if(!event.repeat)togglePause();return;}
+  if(code==='KeyR'){if(!event.repeat)restart();return;}
+  if(game.state==='playing')keyboard.press(code);
+},true);
+window.addEventListener('keyup', event => {const code=physicalKey(event);if(code)keyboard.release(code);},true);
+window.addEventListener('blur', () => keyboard.clear());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)keyboard.clear();});
+canvas.addEventListener('pointerdown',focusGame);
 canvas.addEventListener('mousemove',event=>{if(event.buttons===1&&screen==='playing'&&game.state==='playing')cameraYaw-=event.movementX*.15*settings.sensitivity;});
 function restart() {
   game = createGame(42,previewScenario,night);
-  screen='playing';panel.style.display='none';keys.clear();
+  screen='playing';panel.style.display='none';keyboard.clear();focusGame();
   previousInput = { ...INITIAL_INPUT };
   pulseFlash = 0;
   document.querySelector('#message').style.display = 'none';
 }
 function currentInput() {
+  const keys=keyboard.sample();
   if (keys.has('ArrowLeft')) cameraYaw += 1.5;
   if (keys.has('ArrowRight')) cameraYaw -= 1.5;
   return {
@@ -307,6 +316,7 @@ function render(time) {
 }
 
 let lastTime = 0, accumulator = 0;
+let nextHudAt=0;
 function frame(now) {
   if (!lastTime) lastTime = now;
   accumulator = Math.min(.25, accumulator + (now - lastTime) / 1000);
@@ -322,12 +332,13 @@ function frame(now) {
       if(night===3&&game.simTick%1800===1680)sound('wind');
       if (events.some(event => event.name === 'pulse')) pulseFlash = 20;
       previousInput = input;
-      updateHud();
     }
     else if(screen==='playing'&&game.state==='paused')step(game,INITIAL_INPUT,INITIAL_INPUT);
     pulseFlash = Math.max(0, pulseFlash - 1);
     accumulator -= 1 / 60;
   }
+  // Keep DOM work out of the fixed-step loop to reduce long input frames.
+  if(screen==='playing'&&(now>=nextHudAt||['won','lost'].includes(game.state))){updateHud();nextHudAt=now+100;}
   render(now);
   requestAnimationFrame(frame);
 }

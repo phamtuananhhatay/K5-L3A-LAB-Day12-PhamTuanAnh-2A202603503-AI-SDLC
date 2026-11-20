@@ -28,6 +28,8 @@ Mở http://127.0.0.1:4173/. Menu → giới thiệu → bắt đầu Đêm 1. T
 | Esc / P | Tạm dừng, cài đặt, tiếp tục, chơi lại hoặc về menu |
 | R | Chơi lại Đêm hiện tại |
 
+Game ưu tiên phím vật lý nên WASD không phụ thuộc ký tự chữ mà bộ gõ tạo ra; lần nhấn nhanh được giữ tới tick kế tiếp. Canvas tự nhận focus sau menu/pause. Nếu bộ gõ tiếng Việt vẫn chặn phím ở cấp hệ điều hành, chuyển bộ gõ sang chế độ tiếng Anh khi chơi.
+
 Đom đóm nhặt tự động trong1m. Sức chứa bắt đầu10, tăng2 mỗi lần thắp thành công (kể cả thắp lại), tối đa20. Đèn chưa từng sáng cần10, thắp lại cần5, có thể nạp từng phần. Mỗi lần thắp cấp100dầu; hao1/giây. E tại đèn sáng để châm10dầu/mote. Dầu dưới30 mất vùng an toàn và nhấp nháy1Hz; hết dầu thì tắt. Đêm kéo dài240/270/300giây.
 
 Pulse tốn3, cooldown3s. Dash14m/s trong0.2s, cooldown1.5s. Bùa Gió kéo dài10s: chạy7.2m/s, dash không cooldown (vẫn phải nhấn lại).

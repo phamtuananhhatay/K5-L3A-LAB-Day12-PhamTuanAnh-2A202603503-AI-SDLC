@@ -27,6 +27,16 @@ try{
  await send('Page.navigate',{url:`${base}/?scene=fuel&night=1`},sessionId);await wait(300);await ready();
  await evaluate(`document.querySelector('#flow button').click();true`);await wait(200);
  const read=()=>evaluate(`import('/src/game.mjs').then(m=>m.inspectGame())`);
+ assert.equal(await evaluate(`document.activeElement.tagName`),'CANVAS');
+ const tapStart=(await read()).player.pos;
+ await evaluate(`window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyD',key:'đ',isComposing:true}));window.dispatchEvent(new KeyboardEvent('keyup',{code:'KeyD',key:'đ',isComposing:true}));true`);
+ await wait(100);const tapEnd=(await read()).player.pos;assert.ok(tapEnd[0]<tapStart[0],'same-task press/release must move D');assert.ok(Math.abs(tapEnd[0]-tapStart[0]+.1)<.002);
+ const holdingStart=(await read()).player.pos;
+ await evaluate(`window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyW',key:'ư',isComposing:true}));true`);await wait(250);const holdingEnd=(await read()).player.pos;
+ assert.ok(holdingEnd[2]>holdingStart[2]+.5,'held physical W must keep moving');
+ await evaluate(`window.dispatchEvent(new KeyboardEvent('keyup',{code:'KeyW',key:'ư',isComposing:true}));true`);await wait(100);const stopped=(await read()).player.pos;await wait(150);assert.deepEqual((await read()).player.pos,stopped,'release must stop walking');
+ // Return to the same deterministic preview before checking fuel interaction.
+ await evaluate(`window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyR'}));true`);await wait(150);
  const before=await read();assert.equal(before.player.capacity,14);assert.equal(before.player.carried,5);
  assert.equal(await evaluate(`document.documentElement.dataset.colorblind`),'true');
  assert.equal(await evaluate(`getComputedStyle(document.querySelector('#time')).color`),'rgb(255, 255, 255)');
@@ -40,7 +50,7 @@ try{
  await evaluate(`document.querySelector('#flow button').click();true`);
  const benchmark=await evaluate(`new Promise(resolve=>{let frames=0;const start=performance.now();function count(now){frames++;if(now-start>=3000)resolve({frames,seconds:(now-start)/1000,average_fps:frames*1000/(now-start)});else requestAnimationFrame(count);}requestAnimationFrame(count);})`);
  const image=await send('Page.captureScreenshot',{format:'png'},sessionId);await writeFile(join(output,'refueled.png'),Buffer.from(image.data,'base64'));
- const report={viewport:[1280,720],colorblind_persisted:true,warning_white_and_icon:true,capacity_hud:true,refuel:true,pause_freezes_fuel:true,...benchmark};await writeFile(join(output,'browser-check.json'),JSON.stringify(report,null,2));
+ const report={viewport:[1280,720],canvas_keyboard_focus:true,quick_tap_received:true,physical_W_with_composing_key:true,hold_and_release:true,colorblind_persisted:true,warning_white_and_icon:true,capacity_hud:true,refuel:true,pause_freezes_fuel:true,...benchmark};await writeFile(join(output,'browser-check.json'),JSON.stringify(report,null,2));
  console.log('PASS Phase3 browser',report);
 }finally{
  ws?.close();chrome?.kill();server?.kill();await wait(500);

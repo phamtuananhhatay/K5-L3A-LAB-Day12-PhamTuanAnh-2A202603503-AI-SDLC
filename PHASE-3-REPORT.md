@@ -42,4 +42,6 @@ AGENTS.md và `skills/verify-phase/SKILL.md` được cập nhật phạm vi1.2.
 
 ## Giới hạn
 
+Sau tag phase-3 có bản sửa nhận phím: buffer tap, physical key mapping/focus và giảm HUD xuống10Hz. `tests/input.mjs` và browser-check hiện tại kiểm chứng nhấn nhanh, giữ/nhả và event composing. Đây là sự kiện mô phỏng, chưa kiểm tra trực tiếp hook UniKey của người làm lab; xem CHANGELOG.md.
+
 Các kết quả trên chứng minh các ca tự viết, không phải kết quả test ẩn của giảng viên. Chưa chơi bằng tay trọn3Đêm và chưa chạy trực tiếp trên macOS/Linux; mã game dùng Node/WebGL không phụ thuộc thư viện hệ điều hành. Các tag/bằng chứng Phase1/2 là lịch sử theo luật lúc phát hành. Bản1.2 được chốt bằng tag cục bộ phase-3; việc push GitHub cần xác nhận xuất repo đã được hỏi trước đó.

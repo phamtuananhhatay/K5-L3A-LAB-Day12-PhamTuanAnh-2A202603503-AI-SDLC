@@ -10,6 +10,7 @@ const routes = new Map([
   ['/src/colors.mjs', ['../src/colors.mjs', 'text/javascript; charset=utf-8']],
   ['/tests/phase3/preview.json', ['../tests/phase3/preview.json', 'application/json; charset=utf-8']],
   ['/src/game.mjs', ['../src/game.mjs', 'text/javascript; charset=utf-8']],
+  ['/src/input.mjs', ['../src/input.mjs', 'text/javascript; charset=utf-8']],
   ['/smoke', ['../smoke/hello-3d.html', 'text/html; charset=utf-8']],
 ]);
 const port = Number(process.env.PORT || 4173);
