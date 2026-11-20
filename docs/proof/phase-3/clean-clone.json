@@ -1,0 +1,13 @@
+{
+  "source_commit": "5c57d49",
+  "method": "git clone --no-hardlinks into an independent temporary directory",
+  "commands": ["node scripts/build.mjs", "node tests/phase1/verify.mjs"],
+  "exit_code": 0,
+  "build": "PASS",
+  "maps": "PASS",
+  "retained_phase2_scenarios": "14 PASS, including byte determinism",
+  "invalid_file_checks": "PASS",
+  "standardized_regression": "PASS",
+  "phase3_checks": "33 PASS (25 CLI scenarios + 8 boundary groups)",
+  "environment": "Windows, Node.js v24.12.0; no third-party dependencies installed"
+}

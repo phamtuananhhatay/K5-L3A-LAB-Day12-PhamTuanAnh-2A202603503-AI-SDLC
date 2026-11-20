@@ -26,6 +26,7 @@ node tests/phase3/benchmark.mjs
 ```
 
 - Build/cú pháp và contract tuning: PASS.
+- Clone sạch commit `5c57d49` vào thư mục tạm độc lập bằng `git clone --no-hardlinks`, chạy build và entry point toàn bộ hồi quy/Phase3: PASS, exit0. [Kết quả](docs/proof/phase-3/clean-clone.json).
 - 14 scenario hồi quy Phase2 với kỳ vọng đã cập nhật đúng Ticket-03, 5 ca file lỗi và nhóm hồi quy chuẩn: PASS.
 - Phase3: **33 mục kiểm tra**, gồm25scenario CLI chạy2lần so byte và8nhóm kiểm tra biên/state trực tiếp: PASS. [Summary máy tạo](docs/proof/phase-3/summary.json).
 - Input, output JSONL và điều kiện đạt được lưu ở `tests/phase3/cases.json` và [docs/proof/phase-3](docs/proof/phase-3/). Hồi quy1.2 nằm trong thư mục regression riêng; không ghi đè output lịch sử Phase2.
@@ -41,4 +42,4 @@ AGENTS.md và `skills/verify-phase/SKILL.md` được cập nhật phạm vi1.2.
 
 ## Giới hạn
 
-Các kết quả trên chứng minh các ca tự viết, không phải kết quả test ẩn của giảng viên. Chưa chơi bằng tay trọn3Đêm và chưa chạy trực tiếp trên macOS/Linux; mã game dùng Node/WebGL không phụ thuộc thư viện hệ điều hành. Các tag/bằng chứng Phase1/2 là lịch sử theo luật lúc phát hành. Tag phase-3 sẽ chứa bản1.2; việc push GitHub cần xác nhận xuất repo đã được hỏi trước đó.
+Các kết quả trên chứng minh các ca tự viết, không phải kết quả test ẩn của giảng viên. Chưa chơi bằng tay trọn3Đêm và chưa chạy trực tiếp trên macOS/Linux; mã game dùng Node/WebGL không phụ thuộc thư viện hệ điều hành. Các tag/bằng chứng Phase1/2 là lịch sử theo luật lúc phát hành. Bản1.2 được chốt bằng tag cục bộ phase-3; việc push GitHub cần xác nhận xuất repo đã được hỏi trước đó.
