@@ -30,6 +30,14 @@ node src/headless.mjs --seed 42 --night 1 --scenario tests/phase1/pickup.scenari
 | P1-10 điểm/HUD/restart | Dùng ca nhặt, nạp, pulse, thắng/thua | Chạy từng ca; sau thắng/thua thao tác restart bản chơi | Điểm theo `score.*` của contract; HUD hiển thị máu/ánh sáng/đèn/điểm/thời gian; restart đưa về trạng thái đầu. |
 | P1-11 hình ảnh | Bản chơi | Chơi trước/sau thắp đèn | Ảnh cho thấy đảo sáng dần, Mây đội nón lá có đèn nhỏ, màu vàng cam/tím đen, không máu me. |
 
+### Ca kết hợp và ca biên đã lưu
+
+| Ca | Trạng thái ban đầu | Input | Giá trị mong đợi |
+|---|---|---|---|
+| `sequence` | `sequence.scenario.json`: carried 2, hai mote gần Mây, L1 cách 1 m, S1 cách 4,5 m | `sequence.inputs.json`: interact tick 1, pulse tick 3, đi +X từ tick 5 đến 14 | Tick 1 có 2 `mote_picked`, carried 4, score 20; tick 2 có `deposit` amount 3 và `lantern_lit`, carried 1, score 120; tick 4 có `pulse` stun S1, carried 0, score 125; tick 15 pos `[1,0,0]`; tick 16 vẫn `[1,0,0]`. |
+| `boundary` | `boundary.scenario.json`: mote tại X=1,Y=4 và X=1.001,Y=0, Mây ở gốc | Không input, 1 tick | Chỉ mote đúng bán kính 1 m được nhặt; `motes_active=1`, carried 1, score 10. Độ cao Y không ảnh hưởng khoảng cách ngang. |
+| `invalid` | `invalid.inputs.json`: hai frame cùng tick; `invalid.scenario.json`: mote có tọa độ không phải số | Mỗi file chạy riêng | Exit code 2; stderr nêu lỗi; không có output JSONL thành công. |
+
 ## Kiểm tra giao thức không phụ thuộc luật chơi
 
 1. Chạy `--ticks 0`: chỉ có snapshot tick 0 và `end`; `sim_tick=0`, không event từ dựng scenario.
@@ -68,4 +76,4 @@ scenario + seed + input frames
 
 ## Trạng thái hiện tại
 
-Đã chạy các scenario lõi và lưu output thực tế tại `docs/proof/`. Các ca kiểm tra bổ sung và phần đồ họa cần đối chiếu với [bằng chứng Phase 1](../../docs/proof/phase-1.md). Chưa kiểm thử thủ công toàn bộ một lượt chơi bằng bàn phím trên macOS/Linux.
+Đã chạy các scenario lõi và ca kết hợp/biên; output thực tế ở `docs/proof/`. `node scripts/capture-phase1-evidence.mjs` tạo lại bằng chứng, lưu mã thoát/stderr cho ca lỗi và so sánh output cùng seed theo byte. Đối chiếu [bằng chứng Phase 1](../../docs/proof/phase-1.md). Chưa kiểm thử thủ công toàn bộ một lượt chơi bằng bàn phím trên macOS/Linux.

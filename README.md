@@ -43,7 +43,7 @@ node src/headless.mjs --seed 42 --night 1 --scenario tests/phase1/pickup.scenari
 node tests/phase1/verify.mjs
 ```
 
-Đầu ra là JSONL theo Test Contract v1.0. Cùng seed, scenario và inputs cho cùng output. Xem [kế hoạch kiểm chứng](tests/phase1/PLAN.md), [checklist yêu cầu](docs/notes/phase-1-checklist.md) và [bằng chứng](docs/proof/).
+Đầu ra là JSONL theo Test Contract v1.0. Cùng seed, scenario và inputs cho cùng output. Chạy `node scripts/capture-phase1-evidence.mjs` để tạo lại output bằng chứng và kiểm tra tính tất định. Xem [kế hoạch kiểm chứng](tests/phase1/PLAN.md), [checklist yêu cầu](docs/notes/phase-1-checklist.md) và [bằng chứng](docs/proof/phase-1.md).
 
 ## Giả định Phase 1
 

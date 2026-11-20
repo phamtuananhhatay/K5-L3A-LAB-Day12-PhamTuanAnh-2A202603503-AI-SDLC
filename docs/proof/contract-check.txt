@@ -1,0 +1,9 @@
+invalid.inputs.json: exit_code=2
+stderr=input frame ticks must increase strictly
+
+invalid.scenario.json: exit_code=2
+stderr=scenario.motes must be an array of [x,y,z]
+
+determinism: byte_identical=true
+seed=42 ticks=300 snapshot_every=10
+sha256=04a1b22784f1c19de6eb65d78ac39ff02424f32416d3613eda81adc9ee54a02c

@@ -13,13 +13,72 @@ function check(name, fn) {
   count++;
   console.log(`PASS ${name}`);
 }
+function validateOutput(lines, requestedTicks, interval) {
+  const states = new Set(['playing', 'won', 'lost']);
+  const eventData = {
+    mote_picked: ['carried'], deposit: ['lantern_id', 'amount', 'deposited'],
+    lantern_lit: ['lantern_id'], pulse: ['stunned_ids'],
+    player_hit: ['by', 'flames', 'dropped'], shade_spawned: ['id'],
+    game_over: ['result', 'reason'],
+  };
+  const position = value => {
+    assert.ok(Array.isArray(value) && value.length === 3);
+    for (const number of value) {
+      assert.ok(Number.isFinite(number));
+      assert.ok(Math.abs(number * 1000 - Math.round(number * 1000)) < 1e-6, 'coordinate exceeds 3 decimals');
+    }
+  };
+  let lastSnapshotTick = -1;
+  for (const [index, item] of lines.entries()) {
+    assert.ok(['snapshot', 'event', 'end'].includes(item.type), `record ${index} has invalid type`);
+    if (item.type === 'snapshot') {
+      assert.equal(item.sim_tick, item.tick);
+      assert.ok(item.tick === 0 || item.tick % interval === 0);
+      assert.ok(item.tick > lastSnapshotTick);
+      lastSnapshotTick = item.tick;
+      assert.ok(states.has(item.state));
+      assert.ok(Number.isFinite(item.time_left_s));
+      assert.ok(Number.isFinite(item.score));
+      assert.ok(Number.isInteger(item.player.flames) && Number.isInteger(item.player.carried));
+      position(item.player.pos);
+      assert.equal(item.lanterns.length, 5);
+      for (const lantern of item.lanterns) {
+        assert.equal(typeof lantern.id, 'string');
+        position(lantern.pos);
+        assert.equal(typeof lantern.lit, 'boolean');
+        assert.ok(Number.isInteger(lantern.deposited));
+      }
+      for (const shade of item.shades) {
+        assert.equal(typeof shade.id, 'string');
+        position(shade.pos);
+        assert.equal(typeof shade.state, 'string');
+      }
+      assert.ok(Number.isInteger(item.motes_active));
+    } else if (item.type === 'event') {
+      assert.ok(item.tick > 0 && item.tick <= requestedTicks);
+      assert.ok(eventData[item.name], `unknown event ${item.name}`);
+      for (const field of eventData[item.name]) assert.ok(Object.hasOwn(item.data, field), `${item.name} lacks ${field}`);
+      if (item.name === 'game_over') {
+        assert.ok(['won', 'lost'].includes(item.data.result));
+        assert.ok(['all_lit', 'dawn', 'no_flames'].includes(item.data.reason));
+      }
+    } else {
+      assert.equal(index, lines.length - 1, 'end must be last');
+      assert.ok(Number.isInteger(item.ticks) && item.ticks <= requestedTicks);
+      assert.ok(states.has(item.state));
+      assert.ok(Number.isFinite(item.score));
+    }
+  }
+}
 async function run(name, { scenario, inputs, ticks = 1, every = 1, seed = 42 } = {}) {
   const out = join(dir, `${name}.jsonl`);
   created.push(out);
   const args = ['src/headless.mjs', '--seed', String(seed), '--night', '1'];
   if (scenario) args.push('--scenario', `tests/phase1/${scenario}.scenario.json`);
   if (inputs) args.push('--inputs', `tests/phase1/${inputs}.inputs.json`);
-  args.push('--ticks', String(ticks), '--snapshot-every', String(every), '--out', out);
+  args.push('--ticks', String(ticks));
+  if (every !== null) args.push('--snapshot-every', String(every));
+  args.push('--out', out);
   const result = spawnSync(process.execPath, args, { encoding: 'utf8' });
   assert.equal(result.status, 0, `${name}: ${result.stderr}`);
   const bytes = await readFile(out);
@@ -27,6 +86,7 @@ async function run(name, { scenario, inputs, ticks = 1, every = 1, seed = 42 } =
   assert.equal(lines[0].type, 'snapshot');
   assert.equal(lines[0].tick, 0);
   assert.equal(lines.at(-1).type, 'end');
+  validateOutput(lines, ticks, every ?? 10);
   return { lines, bytes, events: lines.filter(item => item.type === 'event'), snapshots: lines.filter(item => item.type === 'snapshot'), end: lines.at(-1) };
 }
 
@@ -100,6 +160,37 @@ try {
   const repeat = await run('repeat', { scenario: 'pickup' });
   check('same seed/scenario/input is byte-identical', () => assert.ok(pickup.bytes.equals(repeat.bytes)));
 
+  const generated1 = await run('generated1', { ticks: 120, every: 10 });
+  const generated2 = await run('generated2', { ticks: 120, every: 10 });
+  check('default seeded entities are byte-identical', () => assert.ok(generated1.bytes.equals(generated2.bytes)));
+
+  const sequence = await run('sequence', { scenario: 'sequence', inputs: 'sequence', ticks: 16 });
+  check('multi-action sequence preserves and updates state', () => {
+    assert.deepEqual(sequence.events.map(item => [item.tick, item.name]), [
+      [1, 'mote_picked'], [1, 'mote_picked'], [2, 'deposit'], [2, 'lantern_lit'], [4, 'pulse'],
+    ]);
+    assert.equal(sequence.snapshots.find(item => item.tick === 1).player.carried, 4);
+    assert.equal(sequence.snapshots.find(item => item.tick === 2).player.carried, 1);
+    assert.equal(sequence.snapshots.find(item => item.tick === 4).player.carried, 0);
+    assert.equal(sequence.snapshots.find(item => item.tick === 4).shades[0].state, 'stunned');
+    assert.deepEqual(sequence.snapshots.find(item => item.tick === 15).player.pos, [1, 0, 0]);
+    assert.equal(sequence.snapshots.find(item => item.tick === 16).player.pos[0], 1);
+    assert.equal(sequence.end.score, 125);
+  });
+
+  const boundary = await run('boundary', { scenario: 'boundary' });
+  check('pickup uses horizontal distance and includes exact boundary', () => {
+    assert.equal(boundary.events.length, 1);
+    assert.equal(boundary.snapshots[1].motes_active, 1);
+    assert.equal(boundary.snapshots[1].player.carried, 1);
+  });
+
+  const defaultInterval = await run('default-interval', { scenario: 'empty', ticks: 11, every: null });
+  check('snapshot-every defaults to ten', () => {
+    assert.deepEqual(defaultInterval.snapshots.map(item => item.tick), [0, 10]);
+    assert.equal(defaultInterval.end.ticks, 11);
+  });
+
   const badOut = join(dir, 'invalid.jsonl');
   const invalid = spawnSync(process.execPath, [
     'src/headless.mjs', '--seed', '42', '--night', '1',
@@ -108,6 +199,15 @@ try {
   check('invalid frame ticks exit 2 with stderr', () => {
     assert.equal(invalid.status, 2);
     assert.match(invalid.stderr, /strictly/);
+  });
+
+  const invalidScenario = spawnSync(process.execPath, [
+    'src/headless.mjs', '--seed', '42', '--night', '1',
+    '--scenario', 'tests/phase1/invalid.scenario.json', '--ticks', '1', '--out', badOut,
+  ], { encoding: 'utf8' });
+  check('invalid scenario exits 2 with stderr', () => {
+    assert.equal(invalidScenario.status, 2);
+    assert.match(invalidScenario.stderr, /scenario\.motes/);
   });
 
   check('horizontal radius includes the boundary', () => {

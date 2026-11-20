@@ -9,8 +9,8 @@
 | Việc | Công cụ | Ước tính token/chi phí | Kết quả và điều chỉnh |
 |---|---|---:|---|
 | Chuẩn bị môi trường | Codex | Chưa có số liệu | Tạo demo WebGL2 không phụ thuộc thư viện và lệnh smoke |
-| Triển khai Bước 4 | Codex | Chưa có số liệu truy xuất | Dùng chung lõi cho WebGL2 và headless; 14 kiểm tra headless đạt, ảnh WebGL2 đã chụp |
+| Triển khai Bước 4–5 | Codex | Chưa có số liệu truy xuất | Dùng chung lõi cho WebGL2 và headless; 19 kiểm tra headless đạt, ảnh WebGL2 và output JSONL đã lưu |
 
 ## Đánh giá Phase 1
 
-Các hành vi lõi của Đêm 1 đã triển khai. Headless đạt 14 kiểm tra và output các scenario chính được lưu ở `docs/proof/`. WebGL2 đã render qua Chrome headless. Chưa kiểm thử thủ công một lượt chơi hoàn chỉnh trên macOS/Linux; chưa gắn tag hoặc push. Không có lỗi AI lặp lại đã được quan sát trong bước này. Bài học: kiểm tra schema và output từ các scenario nhỏ trước khi làm phần đồ họa giúp giữ một nguồn luật chung.
+Các hành vi lõi của Đêm 1 đã triển khai. Headless đạt 19 kiểm tra; output của scenario đơn lẻ, chuỗi nhiều hành động, ca biên và ca lỗi được lưu ở `docs/proof/`. WebGL2 đã render qua Chrome headless. Chưa kiểm thử thủ công một lượt chơi hoàn chỉnh trên macOS/Linux; chưa gắn tag hoặc push. Không có lỗi AI lặp lại đã được quan sát trong bước này. Bài học: kiểm tra schema và output từ các scenario nhỏ trước khi làm phần đồ họa giúp giữ một nguồn luật chung.
