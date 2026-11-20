@@ -1,6 +1,14 @@
 # Đảo Đèn Lồng — agent guide
 
 - Đọc `docs/requirements/PRD-0.txt`, Ticket-02, `docs/requirements/Ticket-03.md`, `docs/notes/ADR-003-lantern-fuel.md` và `game.contract.json` trước khi sửa luật game. Ticket-03 thay luật dầu, điểm và thắng.
+- Đọc `docs/requirements/Ticket-04.md` và `docs/notes/phase-4-checklist.md` trước khi làm Phase 4.
+- Phase 4 giữ nguyên luật gameplay Ticket-03; cấu hình benchmark phải tách khỏi bản chơi thường.
+- Bench phải dựng đúng cảnh chuẩn và tính số đo từ frame thật; không tự điền số liệu.
+- Soak chạy nhiều Đêm trong cùng một tiến trình; đo RSS đúng các thời điểm ticket quy định.
+- Giao diện bảng điểm và lệnh export phải dùng cùng nguồn dữ liệu.
+- Bằng chứng Phase 4 lưu riêng, không ghi đè bằng chứng các tag trước.
+- Chỉ khai bench_cmd/soak_cmd chính thức khi các lệnh đã chạy được.
+- Không ghi Đạt khi thiếu bằng chứng hoặc có kiểm tra liên quan đang lỗi.
 - Logic gameplay nằm trong `src/core.mjs`; cả trình duyệt và headless phải dùng chung `createGame` và `step`.
 - Sau khi đổi thông số, cập nhật `game.contract.json` cùng lúc; `node scripts/build.mjs` kiểm tra chúng khớp nhau.
 - Chạy `node tests/phase1/verify.mjs` sau khi sửa logic/CLI: gồm maps, hồi quy Phase2 đã cập nhật đúng luật và test Phase3. Không ghi đạt nếu lệnh đỏ; không skip test âm thầm. Đọc CHANGELOG.md cho kỳ vọng bị thay.
