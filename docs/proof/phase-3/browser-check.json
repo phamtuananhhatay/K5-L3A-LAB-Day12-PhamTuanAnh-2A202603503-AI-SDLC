@@ -1,0 +1,14 @@
+{
+  "viewport": [
+    1280,
+    720
+  ],
+  "colorblind_persisted": true,
+  "warning_white_and_icon": true,
+  "capacity_hud": true,
+  "refuel": true,
+  "pause_freezes_fuel": true,
+  "frames": 433,
+  "seconds": 3.0049999999284744,
+  "average_fps": 144.09317804003538
+}

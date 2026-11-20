@@ -1,0 +1,4 @@
+{
+  "exit_code": 2,
+  "stderr": "input frame ticks must increase strictly\n"
+}

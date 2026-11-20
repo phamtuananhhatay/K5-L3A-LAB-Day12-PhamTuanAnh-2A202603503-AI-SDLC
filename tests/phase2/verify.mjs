@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createGame, step, snapshot, INITIAL_INPUT, TUNING } from '../../src/core.mjs';
 const evidence=process.argv.includes('--evidence');
-const folder=evidence?'docs/proof/phase-2':mkdtempSync(join(tmpdir(),'lantern-p2-'));
+const folder=evidence?'docs/proof/phase-3/regression':mkdtempSync(join(tmpdir(),'lantern-p2-'));
 mkdirSync(folder,{recursive:true});
 let passed=0;
 try{

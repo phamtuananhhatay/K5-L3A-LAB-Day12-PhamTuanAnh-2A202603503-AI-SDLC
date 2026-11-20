@@ -41,7 +41,7 @@ function validateScenario(value) {
   if (value.player !== undefined) {
     if (!isObject(value.player)) throw new InputFileError('scenario.player must be an object');
     if (value.player.pos !== undefined && !vector(value.player.pos)) throw new InputFileError('scenario.player.pos must be [x,y,z]');
-    for (const name of ['carried', 'flames', 'invuln_ticks', 'dash_cd_ticks', 'pulse_cd_ticks', 'charm_ticks']) {
+    for (const name of ['carried', 'flames', 'invuln_ticks', 'dash_cd_ticks', 'pulse_cd_ticks', 'charm_ticks', 'successful_lights']) {
       if (value.player[name] !== undefined && !nonnegativeInteger(value.player[name])) throw new InputFileError(`scenario.player.${name} must be a nonnegative integer`);
     }
   }
@@ -51,15 +51,17 @@ function validateScenario(value) {
   if (value.motes !== undefined && (!Array.isArray(value.motes) || !value.motes.every(item => vector(item)))) {
     throw new InputFileError('scenario.motes must be an array of [x,y,z]');
   }
-  if (value.shades !== undefined && (!Array.isArray(value.shades) || !value.shades.every(item => isObject(item) && vector(item.pos) && (item.id === undefined || typeof item.id === 'string') && (item.state === undefined || ['spawning','wander','chase','recoil','stunned'].includes(item.state)) && (item.state_ticks_left === undefined || nonnegativeInteger(item.state_ticks_left))))) {
+  if (value.shades !== undefined && (!Array.isArray(value.shades) || !value.shades.every(item => isObject(item) && vector(item.pos) && (item.id === undefined || typeof item.id === 'string') && (item.state === undefined || ['spawning','wander','chase','recoil','stunned','drain'].includes(item.state)) && (item.state_ticks_left === undefined || nonnegativeInteger(item.state_ticks_left)) && (item.target_lantern_id === undefined || (typeof item.target_lantern_id === 'string' && /^L[1-7]$/.test(item.target_lantern_id)))))) {
     throw new InputFileError('scenario.shades must be an array of objects with pos');
   }
   if (value.lanterns !== undefined && (!Array.isArray(value.lanterns) || !value.lanterns.every(item =>
     isObject(item) && /^L[1-7]$/.test(item.id) &&
     (item.pos === undefined || vector(item.pos)) &&
     (item.lit === undefined || typeof item.lit === 'boolean') &&
+    (item.fuel === undefined || (finite(item.fuel) && item.fuel >= 0 && item.fuel <= 100)) &&
+    (item.ever_lit === undefined || typeof item.ever_lit === 'boolean') &&
     (item.deposited === undefined || nonnegativeInteger(item.deposited))))) {
-    throw new InputFileError('scenario.lanterns must update L1..L5');
+    throw new InputFileError('scenario.lanterns must update valid lantern IDs with fuel in [0,100]');
   }
   if (value.time_left_s !== undefined && (!finite(value.time_left_s) || value.time_left_s < 0)) {
     throw new InputFileError('scenario.time_left_s must be nonnegative');

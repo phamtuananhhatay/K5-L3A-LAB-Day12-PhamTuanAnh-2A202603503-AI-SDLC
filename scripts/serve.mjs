@@ -8,6 +8,7 @@ const routes = new Map([
   ['/src/maps.mjs', ['../src/maps.mjs', 'text/javascript; charset=utf-8']],
   ['/src/audio.mjs', ['../src/audio.mjs', 'text/javascript; charset=utf-8']],
   ['/src/colors.mjs', ['../src/colors.mjs', 'text/javascript; charset=utf-8']],
+  ['/tests/phase3/preview.json', ['../tests/phase3/preview.json', 'application/json; charset=utf-8']],
   ['/src/game.mjs', ['../src/game.mjs', 'text/javascript; charset=utf-8']],
   ['/smoke', ['../smoke/hello-3d.html', 'text/html; charset=utf-8']],
 ]);

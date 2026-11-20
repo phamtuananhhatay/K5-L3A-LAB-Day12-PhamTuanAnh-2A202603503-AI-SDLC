@@ -1,0 +1,17 @@
+{
+  "player": {
+    "carried": 9
+  },
+  "shades": [
+    {
+      "id": "S1",
+      "pos": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "random_motes": false,
+  "random_shades": false
+}

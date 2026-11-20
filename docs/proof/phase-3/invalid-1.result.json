@@ -1,0 +1,4 @@
+{
+  "exit_code": 2,
+  "stderr": "scenario.player.successful_lights must be a nonnegative integer\n"
+}

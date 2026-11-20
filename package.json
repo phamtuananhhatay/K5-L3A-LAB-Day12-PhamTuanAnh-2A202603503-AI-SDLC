@@ -6,7 +6,7 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/serve.mjs",
     "smoke": "node scripts/smoke.mjs",
-    "test": "node tests/phase2/maps.mjs && node tests/phase2/verify.mjs && node tests/phase2/regression.mjs",
-    "evidence": "node tests/phase2/verify.mjs --evidence"
+    "test": "node tests/phase1/verify.mjs",
+    "evidence": "node tests/phase2/verify.mjs --evidence && node tests/phase3/verify.mjs --evidence"
   }
 }

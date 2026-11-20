@@ -1,0 +1,4 @@
+{
+  "exit_code": 2,
+  "stderr": "scenario.shades must be an array of objects with pos\n"
+}

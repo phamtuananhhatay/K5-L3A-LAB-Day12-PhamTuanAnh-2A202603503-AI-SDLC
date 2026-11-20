@@ -4,7 +4,9 @@ const empty={random_motes:false,random_shades:false,random_drifters:false};
 const advance=(g,n,input=INITIAL_INPUT)=>{for(let i=0;i<n;i++)step(g,input,i===0?INITIAL_INPUT:input);};
 const yaw=createGame(1,empty);advance(yaw,60,{...INITIAL_INPUT,move:[0,1],cam_yaw_deg:90});assert.ok(Math.abs(yaw.player.pos[0]-6)<1e-9);
 const capacity=createGame(1,{...empty,motes:Array.from({length:12},()=>[0,0,0])});step(capacity,INITIAL_INPUT);assert.equal(capacity.player.carried,10);assert.equal(capacity.motes.length,2);
-const partial=createGame(1,{...empty,player:{carried:4},lanterns:[{id:'L1',pos:[0,0,1]}]});const action={...INITIAL_INPUT,interact:true};step(partial,action);assert.equal(partial.lanterns[0].deposited,4);assert.equal(partial.score,40);step(partial,INITIAL_INPUT,action);partial.player.carried=6;step(partial,action);assert.equal(partial.lanterns[0].lit,true);advance(partial,120);assert.equal(partial.lanterns[0].lit,true);
+// Ticket-03 replaces deposit scoring with +5/mote. A lamp remains lit for
+// these 120 ticks, but no longer forever: fuel exhaustion is tested in phase3.
+const partial=createGame(1,{...empty,player:{carried:4},lanterns:[{id:'L1',pos:[0,0,1]}]});const action={...INITIAL_INPUT,interact:true};step(partial,action);assert.equal(partial.lanterns[0].deposited,4);assert.equal(partial.score,20);step(partial,INITIAL_INPUT,action);partial.player.carried=6;step(partial,action);assert.equal(partial.lanterns[0].lit,true);advance(partial,120);assert.equal(partial.lanterns[0].lit,true);
 const falling=createGame(1,{...empty,player:{pos:[41,-11,0]}});step(falling,INITIAL_INPUT);advance(falling,60);assert.deepEqual(falling.player.pos,[0,0,0]);assert.equal(falling.player.invulnTicks,90);
 const flight=createGame(1,{...empty,player:{pos:[20,0,18]}},2);advance(flight,85);assert.ok(flight.player.pos[0]>42&&flight.player.grounded,'pad should land on destination island');
 const towerPad=createGame(1,{...empty,player:{pos:[0,3,13]}},3);advance(towerPad,60);assert.ok(towerPad.player.pos[1]>=6,'night 3 pad must reach upper level');
@@ -13,5 +15,5 @@ const lit=createGame(1,{...empty,lanterns:[{id:'L3',lit:true}]});assert.equal(li
 const boundary=createGame(1,{...empty,motes:[[1,0,0],[1.001,0,0],[0,2,0]]});step(boundary,INITIAL_INPUT);assert.equal(boundary.player.carried,1);
 const pulses=createGame(1,{...empty,player:{carried:10}});advance(pulses,200,{...INITIAL_INPUT,pulse:true});assert.equal(pulses.player.carried,7);
 const charm=createGame(1,{...empty,player:{charm_ticks:600}});step(charm,{...INITIAL_INPUT,dash:true});assert.equal(charm.player.dashCooldownTicks,0);
-assert.equal(TUNING.score.per_second_left,2);
+assert.equal(TUNING.score.per_second_left,0); // Time bonus removed by Ticket-03.
 console.log('PASS standardized regression: yaw, capacity, partial deposit/persistence, respawn, both pads, aerial dash, boundary, held pulse, charm cooldown');

@@ -1,0 +1,9 @@
+{
+  "node": "v24.12.0",
+  "platform": "win32",
+  "cpu": "AMD Ryzen 5 5500U with Radeon Graphics         ",
+  "ticks": 18000,
+  "seconds": 1.4003708,
+  "limit_seconds": 30,
+  "scenario": "full300s Night3 with default spawning; invulnerability prevents early death, wind disabled to prevent falling; no lamps lit, result dawn. CLI and JSONL writing included."
+}

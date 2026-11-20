@@ -1,0 +1,4 @@
+{
+  "exit_code": 2,
+  "stderr": "scenario.lanterns must update valid lantern IDs with fuel in [0,100]\n"
+}

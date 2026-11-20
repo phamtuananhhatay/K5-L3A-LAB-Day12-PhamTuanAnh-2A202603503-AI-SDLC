@@ -1,4 +1,4 @@
-import { createGame, INITIAL_INPUT, step, snapshot, TUNING } from './core.mjs';
+import { createGame, INITIAL_INPUT, step, snapshot, TUNING, capacity, fuelValue, lightCost, receivingLanterns } from './core.mjs';
 import { settings, saveSettings, startAudio, sound } from './audio.mjs';
 import { HEX, color } from './colors.mjs';
 
@@ -8,6 +8,7 @@ const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
 document.documentElement.style.color=HEX.text;
 const paletteStyle=document.createElement('style');paletteStyle.textContent=`html,body{background:${HEX.sky};color:${HEX.text}}#hud{color:${HEX.text}}#hud strong,#hud h1,#direction{color:${HEX.gold}}#time.urgent{color:${HEX.danger}}#flow{color:${HEX.text}}#flow button{background:${HEX.gold}}`;document.head.append(paletteStyle);
 paletteStyle.textContent+=`#hud{background:none;border:0;box-shadow:none;backdrop-filter:none;position:static;padding:0}#hud h1{position:fixed;left:50%;top:58px;transform:translateX(-50%);font-size:14px}#hud>div{position:fixed;padding:10px 15px;background:#0e1430d9;border-radius:8px}#hud>div:nth-of-type(1){left:18px;top:18px}#hud>div:nth-of-type(2){display:none}#hud>div:nth-of-type(3){right:18px;top:18px}#hud>div:nth-of-type(4){left:50%;top:18px;transform:translateX(-50%)}#hud>div:nth-of-type(5){right:18px;top:62px}#direction{top:112px!important}`;
+paletteStyle.textContent+=`[data-colorblind=true] #time.urgent{color:#FFFFFF}#cells{max-width:65vw;white-space:nowrap}#fuel-status{position:fixed;left:18px;top:72px;padding:10px;background:#0e1430d9;border-radius:8px;font-size:13px;line-height:1.7}.low-fuel{color:${HEX.danger};animation:fuelBlink 1s steps(2,end) infinite}[data-colorblind=true] .low-fuel{color:#FFFFFF}@keyframes fuelBlink{50%{opacity:.35}}`;
 if (!gl) {
   errorBox.style.display = 'block';
   errorBox.textContent = 'Trình duyệt cần WebGL2 để chơi game.';
@@ -82,6 +83,7 @@ function coneMesh(segments = 12) {
 }
 const disk = circleMesh();
 const cone = coneMesh();
+const paperTear=makeMesh([-.25,.3,0, -.05,.08,0, -.2,-.15,0, -.05,.08,0, .18,-.04,0, .1,-.3,0]);
 
 function multiply(a, b) {
   const result = new Float32Array(16);
@@ -139,7 +141,9 @@ function flush(){
   for(const [vertices,depth]of [[opaqueVertices,true],[transparentVertices,false]]){gl.depthMask(depth);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertices),gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,vertices.length/7);}gl.depthMask(true);opaqueVertices=[];transparentVertices=[];
 }
 
-let game = createGame(42);
+const previewScenario=new URLSearchParams(location.search).get('scene')==='fuel'
+  ? await fetch('/tests/phase3/preview.json').then(response=>{if(!response.ok)throw new Error('Cannot load fuel preview');return response.json();}) : {};
+let game = createGame(42,previewScenario);
 let previousInput = { ...INITIAL_INPUT };
 let cameraYaw = 0;
 let pulseFlash = 0;
@@ -147,11 +151,13 @@ let screen = 'menu', totalScore = 0, night = 1;
 let fpsFrames=0, fpsTime=0, averageFps=0;
 const panel=document.createElement('section');panel.id='flow';document.body.append(panel);
 const style=document.createElement('style');style.textContent=`#flow{position:fixed;inset:0;background:#10162be8;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#ffe2a3}#flow button{font:inherit;padding:12px 28px;background:#f6c56c;border:0;border-radius:8px;cursor:pointer}#flow h2{font-size:36px}#flow label{display:flex;gap:20px}#cells{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:23px;letter-spacing:4px}#cooldowns{position:fixed;bottom:65px;right:20px;padding:10px;background:#12162bcc}#direction{position:fixed;top:16px;right:20px;color:#ffdb77}#time.urgent{color:#ff6565;animation:blink .6s infinite alternate}@keyframes blink{to{opacity:.25}}`;document.head.append(style);
-for(const id of ['cells','cooldowns','direction']){const el=document.createElement('div');el.id=id;document.body.append(el);}
+for(const id of ['cells','cooldowns','direction','fuel-status']){const el=document.createElement('div');el.id=id;document.body.append(el);}
 function showPanel(title,buttons){panel.replaceChildren();const h=document.createElement('h2');h.textContent=title;panel.append(h);for(const [label,action]of buttons){const b=document.createElement('button');b.textContent=label;b.onclick=action;panel.append(b);}panel.style.display='flex';}
-function intro(){screen='intro';showPanel(`Đêm ${night} — ${['Đảo Bến','Cầu Tre','Tháp Chuông'][night-1]}`,[['Ông Đăng: Mang ánh sáng về từng chiếc đèn. Bắt đầu!',()=>{startAudio();restart();}]]);}
+function intro(){screen='intro';showPanel(`Đêm ${night} — ${['Đảo Bến','Cầu Tre','Tháp Chuông'][night-1]}`,[['Ông Đăng: Giữ đảo sáng tới bình minh. Bắt đầu!',()=>{startAudio();restart();}]]);}
 function menu(){screen='menu';showPanel('ĐẢO ĐÈN LỒNG',[['Bắt đầu hành trình',()=>{night=1;totalScore=0;intro();}],['Cài đặt',()=>showSettings(menu)]]);}
-function showSettings(back){showPanel('Cài đặt',[['Quay lại',back]]);for(const [key,label,min,max,stepValue]of [['volume','Âm lượng',0,1,.05],['sensitivity','Độ nhạy chuột',.2,3,.1]]){const row=document.createElement('label');row.textContent=label;const range=document.createElement('input');range.type='range';range.min=min;range.max=max;range.step=stepValue;range.value=settings[key];range.oninput=()=>{settings[key]=Number(range.value);saveSettings();};row.append(range);panel.append(row);}}
+function showSettings(back){showPanel('Cài đặt',[['Quay lại',back]]);for(const [key,label,min,max,stepValue]of [['volume','Âm lượng',0,1,.05],['sensitivity','Độ nhạy chuột',.2,3,.1]]){const row=document.createElement('label');row.textContent=label;const range=document.createElement('input');range.type='range';range.min=min;range.max=max;range.step=stepValue;range.value=settings[key];range.oninput=()=>{settings[key]=Number(range.value);saveSettings();};row.append(range);panel.append(row);}
+  const row=document.createElement('label');row.textContent='Bảng màu dễ phân biệt';const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.id='colorblind-setting';checkbox.checked=settings.colorblind;checkbox.onchange=()=>{settings.colorblind=checkbox.checked;saveSettings();document.documentElement.dataset.colorblind=String(settings.colorblind);};row.append(checkbox);panel.append(row);
+}
 function pauseMenu(){showPanel('Tạm dừng',[['Tiếp tục',()=>togglePause()],['Chơi lại Đêm',restart],['Cài đặt',()=>showSettings(pauseMenu)],['Về menu',menu]]);}
 function togglePause(){if(screen!=='playing')return;const input={...INITIAL_INPUT,pause:true};step(game,input,INITIAL_INPUT);previousInput={...INITIAL_INPUT};if(game.state==='paused')pauseMenu();else panel.style.display='none';}
 const keys = new Set();
@@ -166,7 +172,7 @@ window.addEventListener('keyup', event => keys.delete(event.code));
 window.addEventListener('blur', () => keys.clear());
 canvas.addEventListener('mousemove',event=>{if(event.buttons===1&&screen==='playing'&&game.state==='playing')cameraYaw-=event.movementX*.15*settings.sensitivity;});
 function restart() {
-  game = createGame(42,{},night);
+  game = createGame(42,previewScenario,night);
   screen='playing';panel.style.display='none';keys.clear();
   previousInput = { ...INITIAL_INPUT };
   pulseFlash = 0;
@@ -183,26 +189,32 @@ function currentInput() {
   };
 }
 function updateHud() {
+  document.documentElement.dataset.colorblind=String(settings.colorblind);
   document.querySelector('#hud h1').textContent=`ĐẢO ĐÈN LỒNG · ĐÊM ${night}`;
   document.querySelector('#flames').textContent = game.player.flames;
   document.querySelector('#carried').textContent = game.player.carried;
-  document.querySelector('#lit').parentElement.innerHTML=`Đèn đã thắp: <strong id="lit">${game.lanterns.filter(item => item.lit).length}</strong> / ${game.lanterns.length}`;
+  document.querySelector('#lit').parentElement.innerHTML=`Đèn đang sáng: <strong id="lit">${game.lanterns.filter(item => item.lit).length}</strong> / ${game.lanterns.length} · Cần ${Math.ceil(TUNING.win_ratio*game.lanterns.length)} lúc bình minh`;
   const seconds=Math.ceil(game.timeLeft);
-  document.querySelector('#time').textContent = `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;
+  document.querySelector('#time').textContent = `${settings.colorblind&&seconds<=30?'⚠ ':''}${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;
   document.querySelector('#time').classList.toggle('urgent',seconds<=30);
   document.querySelector('#score').textContent = game.score;
-  const nearby = game.lanterns.find(lantern => Math.hypot(lantern.pos[0] - game.player.pos[0], lantern.pos[2] - game.player.pos[2]) <= TUNING.interact_radius);
+  const nearby = receivingLanterns(game)[0];
   const hint = document.querySelector('#hint');
   if (nearby) {
     hint.textContent = nearby.lit
-      ? `${nearby.id} đã sáng vĩnh viễn trong lượt chơi · Vùng sáng bảo vệ Mây · R chơi lại`
-      : `E — Nạp ánh sáng (${nearby.deposited}/10) · Đang mang ${game.player.carried}`;
+      ? `E — Châm dầu ${nearby.id} (${fuelValue(nearby).toFixed(1)}/100) · Mỗi đom đóm +10 dầu`
+      : `E — ${nearby.ever_lit?'Thắp lại':'Nạp ánh sáng'} ${nearby.id} (${nearby.deposited}/${lightCost(nearby)}) · Đang mang ${game.player.carried}`;
   } else {
     hint.textContent = 'WASD · Space nhảy · Shift lướt · E nạp · Q tỏa sáng · Kéo chuột xoay camera · Esc tạm dừng';
   }
-  document.querySelector('#cells').textContent='●'.repeat(game.player.carried)+'○'.repeat(10-game.player.carried);
+  const limit=capacity(game.player);
+  document.querySelector('#cells').textContent=`${game.player.carried} / ${limit} `+'●'.repeat(Math.min(game.player.carried,limit))+'○'.repeat(Math.max(0,limit-game.player.carried));
+  document.querySelector('#cells').style.fontSize=limit>14?'17px':'23px';
+  const status=document.querySelector('#fuel-status');status.replaceChildren();
+  for(const l of game.lanterns){const row=document.createElement('div');const low=l.lit&&l.fuelUnits<TUNING.low_fuel_threshold*60;row.classList.toggle('low-fuel',low);row.textContent=`${settings.colorblind&&low?'⚠ ':''}${l.id}: ${l.lit?`${fuelValue(l).toFixed(1)} dầu`:l.ever_lit?'Tắt — thắp lại 5':'Chưa thắp — cần 10'}`;status.append(row);}
   document.querySelector('#cooldowns').textContent=`Lướt: ${(game.player.dashCooldownTicks/60).toFixed(1)}s · Tỏa sáng: ${(game.player.pulseCooldownTicks/60).toFixed(1)}s · Bùa: ${Math.ceil(game.player.charmTicks/60)}s`;
-  const nearest=game.lanterns.filter(l=>!l.lit).sort((a,b)=>Math.hypot(a.pos[0]-game.player.pos[0],a.pos[2]-game.player.pos[2])-Math.hypot(b.pos[0]-game.player.pos[0],b.pos[2]-game.player.pos[2]))[0];
+  const needingCare=game.lanterns.filter(l=>!l.lit||l.fuelUnits<TUNING.low_fuel_threshold*60);
+  const nearest=needingCare.sort((a,b)=>Math.hypot(a.pos[0]-game.player.pos[0],a.pos[2]-game.player.pos[2])-Math.hypot(b.pos[0]-game.player.pos[0],b.pos[2]-game.player.pos[2]))[0];
   document.querySelector('#direction').textContent=nearest?`➤ ${nearest.id} · ${Math.round(Math.hypot(nearest.pos[0]-game.player.pos[0],nearest.pos[2]-game.player.pos[2]))} m`:'';
   if(nearest){const a=Math.atan2(nearest.pos[0]-game.player.pos[0],nearest.pos[2]-game.player.pos[2])-cameraYaw*Math.PI/180;document.querySelector('#direction').style.transform=`rotate(${-a}rad)`;}
   if(nearest&&viewProjection){const [x,y,z]=nearest.pos;const m=viewProjection;const w=m[3]*x+m[7]*y+m[11]*z+m[15];const sx=(m[0]*x+m[4]*y+m[8]*z+m[12])/w,sy=(m[1]*x+m[5]*y+m[9]*z+m[13])/w;document.querySelector('#direction').style.visibility=w<=0||Math.abs(sx)>1||Math.abs(sy)>1?'visible':'hidden';}
@@ -242,9 +254,9 @@ function render(time) {
   for(const pad of game.map.pads)draw(disk,[pad.pos[0],pad.pos[1]+.03,pad.pos[2]],[1,1,1],[.3,.9,.75,1],0,true);
   gl.depthMask(false);
   for (const lantern of game.lanterns) {
-    if (lantern.lit) {
-      draw(disk, [lantern.pos[0], 0.01, lantern.pos[2]], [TUNING.safe_radius, 1, TUNING.safe_radius], [1, .66, .2, .45]);
-      draw(disk, [lantern.pos[0], 0.02, lantern.pos[2]], [1.5, 1, 1.5], [1, .78, .3, .4]);
+    if (lantern.lit && lantern.fuelUnits>=TUNING.low_fuel_threshold*60) {
+      draw(disk, [lantern.pos[0], lantern.pos[1]+0.01, lantern.pos[2]], [TUNING.safe_radius, 1, TUNING.safe_radius], [1, .66, .2, .45]);
+      draw(disk, [lantern.pos[0], lantern.pos[1]+0.02, lantern.pos[2]], [1.5, 1, 1.5], [1, .78, .3, .4]);
     }
   }
   if (pulseFlash > 0) draw(disk, [p[0], 0.03, p[2]], [TUNING.pulse_radius, 1, TUNING.pulse_radius], [1, .8, .3, .15 * pulseFlash / 20]);
@@ -252,14 +264,23 @@ function render(time) {
 
   for (const lantern of game.lanterns) {
     const [x, y, z] = lantern.pos;
+    const weak=lantern.lit&&lantern.fuelUnits<TUNING.low_fuel_threshold*60;
+    const blinkOn=!weak||Math.floor(game.simTick/30)%2===0;
+    const accent=settings.colorblind?[1,1,1,1]:color('danger');
     draw(cube, [x, y + 1, z], [.22, 2, .22], color('wood'));
-    draw(cube, [x, y + 2.15, z], [1, .85, 1], color(lantern.lit?'lamp':'lampOff'),0,lantern.lit);
-    if(lantern.lit)draw(cube,[x,y+2.15,z],[.7,.9,1.01],color('lampCore'),0,true);
-    draw(cone, [x, y + 2.58, z], [.75, .5, .75], [.56, .23, .27, 1]);
+    draw(cube, [x, y + 2.15, z], [1, lantern.lit?.85:.68, 1], color(lantern.lit&&blinkOn?'lamp':'lampOff'),0,lantern.lit&&blinkOn);
+    if(lantern.lit&&blinkOn)draw(cube,[x,y+2.15,z],[.7,.9,1.01],color('lampCore'),0,true);
+    if(!lantern.lit)draw(paperTear,[x,y+2.15,z-.51],[1,.8,1],color('shade'),0,true);
+    draw(cone, [x, y + (lantern.lit?2.58:2.495), z], [.75, .5, .75], [.56, .23, .27, 1]);
+    if(lantern.lit){
+      const ratio=lantern.fuelUnits/(TUNING.fuel_max*60),barRotation=cameraYaw*Math.PI/180;
+      draw(cube,[x,y+3.3,z],[1.6,.15,.08],color('lampOff'),barRotation,true);
+      if(blinkOn)draw(cube,[x,y+3.3,z-.05],[1.6*ratio,.13,.1],weak?accent:color('gold'),barRotation,true);
+    }
     // Show partial deposits so a successful transfer is not mistaken for a lit lamp.
     if (!lantern.lit) {
-      for (let i = 0; i < TUNING.lantern_cost; i++) {
-        draw(cube, [x + (i - 4.5) * .2, y + 3.3, z], [.14, .14, .14], color(i < lantern.deposited?'gold':'lampOff'),0,true);
+      for (let i = 0; i < lightCost(lantern); i++) {
+        draw(cube, [x + (i - (lightCost(lantern)-1)/2) * .2, y + 3.3, z], [.14, .14, .14], color(i < lantern.deposited?'gold':'lampOff'),0,true);
       }
     }
   }
@@ -271,10 +292,11 @@ function render(time) {
   if(game.night===3&&(game.wind.active||game.simTick%1800>=1680)){for(let i=0;i<12;i++){const a=time*.001+i;draw(cube,[p[0]+Math.sin(a)*5,p[1]+1+i*.15,p[2]+Math.cos(a)*5],[.25,.03,.1],[.8,.7,.3,1],a,true);}}
   for (const shade of game.shades) {
     const [x, y, z] = shade.pos;
-    draw(cone, [x, y, z], [1.15, 1.6, 1.15], color('shadeEdge'));
+    const shadeAccent=settings.colorblind?[0,179/255,1,1]:color('shadeEdge');
+    draw(cone, [x, y, z], [1.15, 1.6, 1.15], shadeAccent,0,true);
     draw(cone, [x, y+.03, z], [1.1, 1.55, 1.1], color(shade.state==='stunned'?'stunned':'shade'),0,true);
-    draw(cube, [x - .23, y + .85, z + .46], [.12, .12, .08], [1, .32, .62, 1]);
-    draw(cube, [x + .23, y + .85, z + .46], [.12, .12, .08], [1, .32, .62, 1]);
+    draw(cube, [x - .23, y + .85, z + .46], [.12, .12, .08], shadeAccent,0,true);
+    draw(cube, [x + .23, y + .85, z + .46], [.12, .12, .08], shadeAccent,0,true);
   }
   draw(cone, [p[0], p[1], p[2]], [.62, 1.45, .62], color('coat'),0,true);
   draw(cube,[p[0],p[1]+1,p[2]],[.65,.15,.65],color('red'),0,true);
